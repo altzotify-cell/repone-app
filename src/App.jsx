@@ -44,7 +44,7 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v12';
+const appId = 'repone-pro-v13';
 
 // --- MASSIVE Exercise Library ---
 const EXERCISE_LIBRARY = [
@@ -69,10 +69,10 @@ const EXERCISE_LIBRARY = [
   { id: 'ba2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
   { id: 'ba3', name: 'Australian Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
   { id: 'ba4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
-
+  
   // ARMS
   { id: 'ar1', name: 'Bench Dips', muscle: 'Arms', icon: '🪑', type: 'reps', count: 15, duration: 0, videoId: '0326dy_-CzM' },
-  { id: 'ar3', name: 'Tricep Extensions', muscle: 'Arms', icon: '🦴', type: 'reps', count: 12, duration: 0, videoId: 'nS8mY_hS-rQ' },
+  { id: 'ar3', name: 'Headbangers', muscle: 'Arms', icon: '🎸', type: 'reps', count: 10, duration: 0, videoId: 'brhRXlOhsAM' },
 
   // CORE
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
@@ -93,11 +93,11 @@ const EXERCISE_LIBRARY = [
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// FIXED URL: Using gemini-2.0-flash on v1beta for production stability
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+// UNIVERSAL ALIAS: gemini-flash-latest to bypass regional "limit: 0" blocks
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
-  if (!geminiKey) throw new Error("API Key Not Found in Vercel settings.");
+  if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
   
   const combinedPrompt = `SYSTEM INSTRUCTION: ${system}\n\nUSER REQUEST: ${prompt}`;
 
@@ -117,6 +117,8 @@ const callGemini = async (prompt, system) => {
 
   const data = await res.json();
   let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  
+  // Clean up markdown blocks
   return text.replace(/```json/g, "").replace(/```/g, "").trim();
 };
 
@@ -166,8 +168,8 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`Give 3 pro tips for ${routine.name}.`, "Fitness Pro. Max 20 words.")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Push harder today!")).finally(() => setIsGeneratingTips(false));
+       callGemini(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 20 words.")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -213,16 +215,31 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}. Return ONLY raw JSON array. Format: [{"name": "Exercise Name", "value": 15}]`;
-            const text = await callGemini(prompt, "You are a fitness API that only returns clean JSON arrays. No intro text.");
+            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. 
+            Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
+            Return ONLY a raw JSON array. No introduction, no markdown.
+            Format: [{"name": "Exercise Name", "value": 15}]`;
+
+            const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
+            
             try {
               const parsed = JSON.parse(text);
               return parsed.map(item => {
-                const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
+                const libMatch = EXERCISE_LIBRARY.find(ex => 
+                  ex.name.toLowerCase() === item.name.toLowerCase()
+                );
                 if (!libMatch) return null;
-                return { ...libMatch, duration: libMatch.type === 'time' ? (item.value || 30) : 0, count: libMatch.type === 'reps' ? (item.value || 10) : 0, id: Math.random().toString(36).substr(2, 9) };
+                return { 
+                  ...libMatch, 
+                  duration: libMatch.type === 'time' ? (item.value || 30) : 0, 
+                  count: libMatch.type === 'reps' ? (item.value || 10) : 0, 
+                  id: Math.random().toString(36).substr(2, 9) 
+                };
               }).filter(Boolean);
-            } catch (e) { console.error("Parsing error:", e); return []; }
+            } catch (e) {
+              console.error("Parsing error:", e);
+              return [];
+            }
         }} />}
       </main>
 
@@ -255,7 +272,7 @@ function Home({ routines, setView, setSelectedRoutine }) {
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all shadow-lg"><Plus size={24} /> Build Session</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all shadow-lg"><Plus size={24} /> Build New Routine</button>
       </div>
     </div>
   );
@@ -386,7 +403,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF });
       setSelected(res); setName(`${aiF} Build`);
-      notify("Gemini 2.0 Plan Synced");
+      notify("AI Routine Sync Successful");
     } catch (e) { 
         notify(`AI Error: ${e.message}`, "error"); 
     } finally { setIsAiLoading(false); }
@@ -403,22 +420,22 @@ function Builder({ user, setView, generateWithAi, notify }) {
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">DESIGN</h2></div>
       
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-10 shadow-2xl border-t-2 border-t-[#007AFF]/20">
-        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini 2.0 Engine</div>
+        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini Pro AI</div>
         
         <div className="grid gap-10">
             <SelectionGroup label="Expertise" options={['Beginner', 'Intermediate', 'Advanced']} active={aiL} onChange={setAiL} />
-            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
+            <SelectionGroup label="Target" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
         <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/20 shadow-xl border-b-4 border-b-blue-700">
-            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan
+            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Smart Plan
         </button>
       </div>
 
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-xl">
         <div className="space-y-2">
             <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-2">Plan Name</p>
-            <input placeholder="Ex: Peak Performance" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
+            <input placeholder="Ex: Muscle Maker" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
         </div>
         
         <div className="space-y-4">
@@ -430,7 +447,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
                 </div>
                 <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
                     <Edit3 size={16} className="text-zinc-600" />
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Set Goal:</label>
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Set Target:</label>
                     <input 
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
