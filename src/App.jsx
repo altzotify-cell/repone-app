@@ -1,27 +1,26 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
   initializeFirestore, collection, doc, onSnapshot, 
-  addDoc, deleteDoc, persistentLocalCache, persistentMultipleTabManager 
+  addDoc, deleteDoc, persistentLocalCache, persistentMultipleTabManager, updateDoc 
 } from 'firebase/firestore';
 import { 
   getAuth, signInAnonymously, onAuthStateChanged 
 } from 'firebase/auth';
 import { 
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area 
+  ResponsiveContainer, AreaChart, Area, XAxis, Tooltip 
 } from 'recharts';
 import { 
   Plus, Play, History, BarChart2, Check, 
   Clock, Dumbbell, Trash2, X, PlusCircle, 
   ChevronLeft, Layout, Zap, Timer as TimerIcon, 
   Flame, Award, Search, Pause, SkipForward, SkipBack, Info, Sparkles, Settings as SettingsIcon,
-  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset
+  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset, Edit3
 } from 'lucide-react';
 
 // --- Environment Variable Helper ---
 const getEnv = (key, fallback = "") => {
   try {
-    // Check for Vite's environment variables
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
       return import.meta.env[key];
     }
@@ -30,7 +29,6 @@ const getEnv = (key, fallback = "") => {
 };
 
 // --- Firebase Configuration ---
-// Using your credentials as fallbacks so it works in the Canvas preview immediately
 const firebaseConfig = {
   apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
   authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
@@ -40,29 +38,26 @@ const firebaseConfig = {
   appId: getEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v2';
+const appId = 'repone-pro-v3';
 
-// --- Constants: Expanded Exercise Library ---
+// --- MEGA Exercise Library ---
 const EXERCISE_LIBRARY = [
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
   { id: 'ch2', name: 'Wide Grip Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
-  { id: 'sh3', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
   { id: 'ba1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
   { id: 'ba3', name: 'Inverted Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
   { id: 'co3', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
   { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
-  { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
 ];
 
@@ -70,18 +65,18 @@ const geminiKey = getEnv('VITE_GEMINI_API_KEY', "");
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
-  if (!geminiKey) return "AI tips disabled (API Key missing).";
-  try {
-    const res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } })
-    });
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text;
-  } catch (err) {
-    return "Stay focused and finish strong!";
-  }
+  if (!geminiKey) throw new Error("API Key Missing");
+  const res = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      contents: [{ parts: [{ text: prompt }] }], 
+      systemInstruction: { parts: [{ text: system }] } 
+    })
+  });
+  const data = await res.json();
+  if (!data.candidates) throw new Error("API Error");
+  return data.candidates[0].content.parts[0].text;
 };
 
 export default function App() {
@@ -97,35 +92,25 @@ export default function App() {
   const [notification, setNotification] = useState(null);
   const [tutorialVideoId, setTutorialVideoId] = useState(null);
 
-  // --- Auth Setup ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          console.error("Auth fail:", e);
-        }
-      }
+      if (!u) await signInAnonymously(auth);
       setUser(auth.currentUser);
       setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  // --- Data Fetching ---
   useEffect(() => {
     if (!user) return;
     const qR = collection(db, 'artifacts', appId, 'users', user.uid, 'routines');
     const qH = collection(db, 'artifacts', appId, 'users', user.uid, 'history');
-    
     const unsubR = onSnapshot(qR, (s) => setRoutines(s.docs.map(d => ({ id: d.id, ...d.data() }))));
     const unsubH = onSnapshot(qH, (s) => setHistory(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date - a.date)));
-    
     return () => { unsubR(); unsubH(); };
   }, [user]);
 
-  const notify = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
+  const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3000); };
 
   const startWorkout = (routine) => {
     setActiveWorkout({
@@ -138,7 +123,7 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`Give me 3 short tips for a workout called ${routine.name}.`, "Elite Fitness Coach")
+       callGemini(`3 tips for ${routine.name}. Max 30 words.`, "Pro Trainer")
        .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
@@ -146,42 +131,35 @@ export default function App() {
   const finishWorkout = async () => {
     if (!user || !activeWorkout) return;
     const duration = Math.floor((Date.now() - activeWorkout.startTime) / 60000);
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'history'), {
-        name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8.5).toFixed(0), exercises: activeWorkout.exercises.length
-      });
-      notify("Session logged! 🔥");
-      setActiveWorkout(null);
-      setView('home');
-    } catch (e) {
-      notify("Failed to save session.");
-    }
+    await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'history'), {
+      name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8.5).toFixed(0), exercises: activeWorkout.exercises.length
+    });
+    notify("Session logged! 🔥");
+    setActiveWorkout(null);
+    setView('home');
   };
 
-  if (isLoading) return <div className="h-screen bg-black flex flex-col items-center justify-center"><div className="text-[#e8ff47] font-bebas text-7xl animate-pulse">REPONE</div></div>;
+  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center text-[#e8ff47] font-bebas text-7xl animate-pulse">REPONE</div>;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#e8ff47] selection:text-black">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;800&display=swap');
         .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 0px; }
       `}</style>
 
       {tutorialVideoId && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
-           <button onClick={() => setTutorialVideoId(null)} className="absolute top-8 right-8 p-3 bg-zinc-900 rounded-full text-white z-[110] active:scale-90 transition-transform"><X /></button>
-           <div className="w-full max-w-2xl aspect-video rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl">
-              <iframe 
-                width="100%" height="100%" 
-                src={`https://www.youtube.com/embed/${tutorialVideoId}?autoplay=1&modestbranding=1&rel=0`} 
-                frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen 
-              />
+        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setTutorialVideoId(null)}>
+           <button className="absolute top-8 right-8 p-3 bg-zinc-900 rounded-full text-white z-[110] active:scale-90 transition-transform"><X /></button>
+           <div className="w-full max-w-2xl aspect-video rounded-3xl overflow-hidden border border-zinc-800 bg-black" onClick={(e) => e.stopPropagation()}>
+              <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${tutorialVideoId}?autoplay=1&rel=0`} frameBorder="0" allowFullScreen />
            </div>
         </div>
       )}
 
       {notification && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl bg-[#e8ff47] text-black font-bold text-xs uppercase animate-bounce shadow-2xl">{notification}</div>
+        <div className={`fixed top-12 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl font-bold text-xs uppercase animate-bounce shadow-2xl ${notification.type === 'error' ? 'bg-rose-600 text-white' : 'bg-[#e8ff47] text-black'}`}>{notification.msg}</div>
       )}
 
       <header className="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50">
@@ -191,22 +169,22 @@ export default function App() {
 
       <main className="px-6 max-w-lg mx-auto pb-32">
         {view === 'home' && <Home routines={routines} history={history} setView={setView} setSelectedRoutine={setSelectedRoutine} />}
-        {view === 'preview' && <RoutinePreview routine={selectedRoutine} onStart={() => startWorkout(selectedRoutine)} onDelete={async () => { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'routines', selectedRoutine.id)); setView('home'); }} onBack={() => setView('home')} onShowTutorial={setTutorialVideoId} />}
+        {view === 'preview' && <RoutinePreview routine={selectedRoutine} onStart={() => startWorkout(selectedRoutine)} onDelete={() => { deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'routines', selectedRoutine.id)); setView('home'); }} onBack={() => setView('home')} onShowTutorial={setTutorialVideoId} />}
         {view === 'live' && <LiveWorkout workout={activeWorkout} setWorkout={setActiveWorkout} onFinish={finishWorkout} onCancel={() => setView('home')} aiTips={aiTips} isGenerating={isGeneratingTips} onShowTutorial={setTutorialVideoId} />}
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
-        {view === 'builder' && <Builder user={user} setView={setView} generateWithAi={async (opts) => {
-            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY JSON: [{"name":"Exercise Name","value":30}].`;
+        {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
+            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}].`;
             const text = await callGemini(prompt, "Workout generator. Exercises: " + EXERCISE_LIBRARY.map(e=>e.name).join(','));
             const match = text.match(/\[.*\]/s);
             if (!match) return [];
             const parsed = JSON.parse(match[0]);
             return parsed.map(item => {
-              const match = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
-              if (!match) return null;
-              return { ...match, duration: match.type === 'time' ? item.value : 0, count: match.type === 'reps' ? item.value : 0, id: Math.random().toString() };
+              const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
+              if (!libMatch) return null;
+              return { ...libMatch, duration: libMatch.type === 'time' ? item.value : 0, count: libMatch.type === 'reps' ? item.value : 0, id: Math.random().toString() };
             }).filter(Boolean);
-        }} notify={notify} />}
+        }} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-zinc-900 px-10 py-5 flex justify-between items-center z-50">
@@ -238,7 +216,7 @@ function Home({ routines, history, setView, setSelectedRoutine }) {
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Create Routine</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Build Workout Plan</button>
       </div>
     </div>
   );
@@ -255,7 +233,7 @@ function RoutinePreview({ routine, onStart, onDelete, onBack, onShowTutorial }) 
         </div>
         <div className="space-y-3">
           {routine.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50 group">
+            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50">
               <span className="text-2xl">{ex.icon}</span>
               <div className="flex-1 font-bold text-sm">{ex.name}</div>
               <button onClick={() => onShowTutorial(ex.videoId)} className="p-2 text-zinc-600 hover:text-[#e8ff47] transition-colors"><Youtube size={18}/></button>
@@ -296,7 +274,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, currentEx, isResting, workout.currentExIndex, onFinish]);
+  }, [isPaused, isResting, workout.currentExIndex, onFinish, currentEx.type]);
 
   const skip = (dir) => {
      setIsResting(false);
@@ -340,6 +318,27 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
   );
 }
 
+function SelectionGroup({ label, options, active, onChange }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center px-1">
+        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {options.map(opt => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-[#141414] text-zinc-400 border-zinc-800'}`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Builder({ user, setView, generateWithAi, notify }) {
   const [name, setName] = useState('');
   const [selected, setSelected] = useState([]);
@@ -353,43 +352,112 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
       setSelected(res); setName(`${aiF} Focus`);
-    } catch (e) { notify("AI Busy. Try again."); }
-    finally { setIsAiLoading(false); }
+    } catch (e) { 
+        const errMsg = e.message === "API Key Missing" ? "Missing Gemini API Key in Vercel" : "AI Busy. Try again.";
+        notify(errMsg, "error"); 
+    } finally { setIsAiLoading(false); }
+  };
+
+  const updateExercise = (id, field, value) => {
+    setSelected(prev => prev.map(ex => ex.id === id ? { ...ex, [field]: value } : ex));
   };
 
   return (
     <div className="space-y-6 pt-4 animate-in slide-in-from-bottom duration-500">
-      <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl">DESIGN</h2></div>
+      <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest">DESIGN</h2></div>
+      
+      {/* GEMINI AI ENGINE */}
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-6 shadow-2xl">
-        <div className="flex items-center gap-2 text-[#e8ff47] text-[10px] uppercase font-black tracking-widest"><Sparkles size={16} fill="currentColor" /> Gemini AI Engine</div>
-        <div className="flex flex-wrap gap-2">
-            {['Beginner', 'Advanced'].map(o => <button key={o} onClick={() => setAiL(o)} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${aiL === o ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black text-zinc-500 border border-zinc-800'}`}>{o}</button>)}
-            {['Full Body', 'Core', 'Upper'].map(o => <button key={o} onClick={() => setAiF(o)} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${aiF === o ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black text-zinc-500 border border-zinc-800'}`}>{o}</button>)}
+        <div className="flex items-center gap-2 text-[#e8ff47] text-[10px] uppercase font-black tracking-widest">
+            <Sparkles size={16} fill="currentColor" /> Gemini AI Engine
         </div>
-        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">{isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan</button>
+        
+        <div className="space-y-4">
+            <SelectionGroup label="Fitness Level" options={['Beginner', 'Advanced']} active={aiL} onChange={setAiL} />
+            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper', 'Lower']} active={aiF} onChange={setAiF} />
+        </div>
+
+        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">
+            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} 
+            Generate Plan
+        </button>
       </div>
+
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-6">
         <input placeholder="Workout Title..." value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
-        <div className="space-y-2">
+        
+        <div className="space-y-3">
           {selected.map((ex) => (
-            <div key={ex.id} className="bg-black p-4 rounded-xl flex justify-between items-center border border-zinc-800 animate-in slide-in-from-right-2"><div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><div><span className="font-bold text-sm block">{ex.name}</span><span className="text-[10px] text-zinc-500 uppercase tracking-widest">{ex.type === 'time' ? `${ex.duration}s` : `${ex.count} Reps`}</span></div></div><button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2 transition-colors"><Trash2 size={18} /></button></div>
+            <div key={ex.id} className="bg-black p-4 rounded-xl flex flex-col gap-3 border border-zinc-800 animate-in slide-in-from-right-2">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xl">{ex.icon}</span>
+                        <span className="font-bold text-sm">{ex.name}</span>
+                    </div>
+                    <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2"><Trash2 size={18} /></button>
+                </div>
+                <div className="flex items-center gap-4 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800/50">
+                    <Edit3 size={14} className="text-zinc-500" />
+                    <label className="text-[10px] font-black uppercase text-zinc-500 shrink-0">Set Target:</label>
+                    <input 
+                        type="number" 
+                        value={ex.type === 'time' ? ex.duration : ex.count}
+                        onChange={(e) => updateExercise(ex.id, ex.type === 'time' ? 'duration' : 'count', parseInt(e.target.value) || 0)}
+                        className="bg-transparent text-[#e8ff47] font-bebas text-xl w-full outline-none"
+                    />
+                    <span className="text-[10px] font-black text-zinc-500 uppercase">{ex.type === 'time' ? 'Secs' : 'Reps'}</span>
+                </div>
+            </div>
           ))}
         </div>
-        <div className="relative"><input placeholder="Find movements..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" /><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} /></div>
-        {search && <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">{EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).map(ex => (
-          <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-[#e8ff47] transition-colors"><div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div><Plus size={18} className="text-[#e8ff47]" /></button>
-        ))}</div>}
+
+        <div className="relative">
+            <input placeholder="Search Exercise..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+        </div>
+        
+        {search && (
+            <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">
+                {EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).map(ex => (
+                <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl active:border-[#e8ff47] transition-colors">
+                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div>
+                    <Plus size={18} className="text-[#e8ff47]" />
+                </button>
+                ))}
+            </div>
+        )}
       </div>
-      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">Save Plan</button>
+
+      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">
+        Save Plan
+      </button>
     </div>
   );
 }
 
 function HistoryView({ history }) {
-  return (<div className="space-y-6 pt-4 animate-in fade-in duration-500"><h2 className="font-bebas text-5xl tracking-widest">LOGS</h2><div className="grid gap-4">{history.map(h => (<div key={h.id} className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 flex justify-between items-center shadow-lg"><div><h4 className="font-bold text-lg mb-1">{h.name}</h4><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{new Date(h.date).toLocaleDateString()} • {h.duration} MIN</p></div><div className="text-right text-[#e8ff47] font-bebas text-3xl">{h.calories} KCAL</div></div>))}</div></div>);
+  return (<div className="space-y-6 pt-4 animate-in fade-in duration-500"><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">LOGS</h2><div className="grid gap-4">{history.map(h => (<div key={h.id} className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 flex justify-between items-center shadow-lg"><div><h4 className="font-bold text-lg mb-1">{h.name}</h4><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{new Date(h.date).toLocaleDateString()} • {h.duration} MIN</p></div><div className="text-right text-[#e8ff47] font-bebas text-3xl">{h.calories} KCAL</div></div>))}</div></div>);
 }
 
 function Stats({ history }) {
   const data = useMemo(() => history.slice(0, 7).reverse().map(h => ({ d: new Date(h.date).toLocaleDateString('en-US', { weekday: 'short' }), v: parseFloat(h.calories) || 0 })), [history]);
-  return (<div className="space-y-8 pt-4 animate-in slide-in-from-bottom duration-500"><h2 className="font-bebas text-5xl tracking-widest">ANALYTICS</h2><div className="bg-[#141414] p-6 rounded-[32px] border border-zinc-800/50 shadow-2xl"><div className="h-48 w-full"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data}><defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e8ff47" stopOpacity={0.2}/><stop offset="95%" stopColor="#e8ff47" stopOpacity={0}/></linearGradient></defs><XAxis dataKey="d" hide /><Area type="monotone" dataKey="v" stroke="#e8ff47" strokeWidth={4} fillOpacity={1} fill="url(#p)" /></AreaChart></ResponsiveContainer></div></div><div className="grid grid-cols-2 gap-4"><div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Total Burn</p><p className="font-bebas text-4xl text-[#e8ff47]">{history.reduce((a,c)=>a+parseFloat(c.calories||0),0).toFixed(0)}</p></div><div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Active Days</p><p className="font-bebas text-4xl text-[#e8ff47]">{[...new Set(history.map(h => new Date(h.date).toDateString()))].length}</p></div></div></div>);
+  return (
+    <div className="space-y-8 pt-4 animate-in slide-in-from-bottom duration-500">
+        <h2 className="font-bebas text-5xl tracking-widest text-zinc-200">ANALYTICS</h2>
+        <div className="bg-[#141414] p-6 rounded-[32px] border border-zinc-800/50 shadow-2xl">
+            <div className="h-48 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data}>
+                        <defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#e8ff47" stopOpacity={0.2}/><stop offset="95%" stopColor="#e8ff47" stopOpacity={0}/></linearGradient></defs>
+                        <XAxis dataKey="d" hide /><Area type="monotone" dataKey="v" stroke="#e8ff47" strokeWidth={4} fillOpacity={1} fill="url(#p)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Total Burn</p><p className="font-bebas text-4xl text-[#e8ff47]">{history.reduce((a,c)=>a+parseFloat(c.calories||0),0).toFixed(0)}</p></div>
+            <div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Active Days</p><p className="font-bebas text-4xl text-[#e8ff47]">{[...new Set(history.map(h => new Date(h.date).toDateString()))].length}</p></div>
+        </div>
+    </div>
+  );
 }
