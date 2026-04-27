@@ -15,11 +15,11 @@ import {
   Clock, Dumbbell, Trash2, X, PlusCircle, 
   ChevronLeft, Layout, Zap, Timer as TimerIcon, 
   Flame, Award, Search, Pause, SkipForward, SkipBack, Info, Sparkles, Settings as SettingsIcon,
-  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset, Edit3, MoveRight
+  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset, Edit3, ChevronDown
 } from 'lucide-react';
 
-// --- Environment Variable Helper ---
-const getViteEnv = (key, fallback = "") => {
+// --- Environment Helper ---
+const getEnv = (key, fallback = "") => {
   try {
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
       return import.meta.env[key];
@@ -30,12 +30,12 @@ const getViteEnv = (key, fallback = "") => {
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-  apiKey: getViteEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
-  authDomain: getViteEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
-  projectId: getViteEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
-  storageBucket: getViteEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
-  messagingSenderId: getViteEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
-  appId: getViteEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
+  apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
+  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
+  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
+  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
+  appId: getEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
 };
 
 const app = initializeApp(firebaseConfig);
@@ -44,14 +44,13 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v4';
+const appId = 'repone-pro-v5';
 
-// --- MEGA Exercise Library ---
+// --- Exercise Library with High-Reliability Video IDs ---
 const EXERCISE_LIBRARY = [
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
-  { id: 'ch2', name: 'Wide Grip Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
+  { id: 'ch2', name: 'Wide Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
-  { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
   { id: 'sh3', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
@@ -60,12 +59,12 @@ const EXERCISE_LIBRARY = [
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
   { id: 'co3', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
   { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
+  { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
 ];
 
-// --- AI Setup ---
+// --- AI Setup (Stable v1 Endpoint) ---
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// Fixed URL: Using gemini-1.5-flash for broader API Key compatibility (solves 404 errors)
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
@@ -79,8 +78,8 @@ const callGemini = async (prompt, system) => {
     })
   });
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error?.message || "AI Error");
+    const err = await res.json();
+    throw new Error(err.error?.message || "AI Error");
   }
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -101,9 +100,7 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        try { await signInAnonymously(auth); } catch (e) { console.error("Auth failed"); }
-      }
+      if (!u) await signInAnonymously(auth).catch(() => {});
       setUser(auth.currentUser);
       setIsLoading(false);
     });
@@ -132,8 +129,8 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`3 very short tips for ${routine.name}.`, "Fitness Coach. Max 25 words.")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Push yourself today!")).finally(() => setIsGeneratingTips(false));
+       callGemini(`3 trainer tips for ${routine.name}. Max 25 words.`, "Elite Fitness Coach")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Push harder!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -141,17 +138,17 @@ export default function App() {
     if (!user || !activeWorkout) return;
     const duration = Math.floor((Date.now() - activeWorkout.startTime) / 60000);
     await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'history'), {
-      name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8.5).toFixed(0), exercises: activeWorkout.exercises.length
+      name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8).toFixed(0), exercises: activeWorkout.exercises.length
     });
     notify("Session logged! 🔥");
     setActiveWorkout(null);
     setView('home');
   };
 
-  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center text-[#e8ff47] font-bebas text-7xl animate-pulse">REPONE</div>;
+  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center text-[#e8ff47] font-bebas text-7xl animate-pulse tracking-tighter">REPONE</div>;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#e8ff47] selection:text-black">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#e8ff47] selection:text-black pb-24">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;800&display=swap');
         .font-bebas { font-family: 'Bebas Neue', sans-serif; }
@@ -171,25 +168,25 @@ export default function App() {
         <div className={`fixed top-12 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl font-bold text-xs uppercase animate-bounce shadow-2xl ${notification.type === 'error' ? 'bg-rose-600 text-white' : 'bg-[#e8ff47] text-black'}`}>{notification.msg}</div>
       )}
 
-      <header className="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50">
-        <h1 className="font-bebas text-4xl tracking-wider leading-none">REP<span className="text-[#e8ff47]">ONE</span></h1>
-        <button onClick={() => setView('stats')} className="text-zinc-600 hover:text-white transition-colors"><BarChart2 size={24} /></button>
+      <header className="px-6 pt-12 pb-6 flex justify-between items-center sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50">
+        <h1 className="font-bebas text-5xl tracking-widest leading-none">REP<span className="text-[#e8ff47]">ONE</span></h1>
+        <button onClick={() => setView('stats')} className="text-zinc-600 hover:text-white transition-colors p-2"><BarChart2 size={24} /></button>
       </header>
 
-      <main className="px-6 max-w-lg mx-auto pb-32">
+      <main className="px-6 max-w-lg mx-auto">
         {view === 'home' && <Home routines={routines} history={history} setView={setView} setSelectedRoutine={setSelectedRoutine} />}
         {view === 'preview' && <RoutinePreview routine={selectedRoutine} onStart={() => startWorkout(selectedRoutine)} onDelete={() => { deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'routines', selectedRoutine.id)); setView('home'); }} onBack={() => setView('home')} onShowTutorial={setTutorialVideoId} />}
         {view === 'live' && <LiveWorkout workout={activeWorkout} setWorkout={setActiveWorkout} onFinish={finishWorkout} onCancel={() => setView('home')} aiTips={aiTips} isGenerating={isGeneratingTips} onShowTutorial={setTutorialVideoId} />}
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}]. Use these movements: ${EXERCISE_LIBRARY.map(e=>e.name).join(',')}`;
-            const text = await callGemini(prompt, "You are a workout JSON generator. Output only the array.");
+            const prompt = `Generate a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}]. Exercises to use: ${EXERCISE_LIBRARY.map(e=>e.name).join(',')}`;
+            const text = await callGemini(prompt, "You are a specialized workout generator. Output ONLY a clean JSON array.");
             const match = text.match(/\[.*\]/s);
             if (!match) return [];
             const parsed = JSON.parse(match[0]);
             return parsed.map(item => {
-              const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
+              const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase().includes(item.name.toLowerCase()));
               if (!libMatch) return null;
               return { ...libMatch, duration: libMatch.type === 'time' ? item.value : 0, count: libMatch.type === 'reps' ? item.value : 0, id: Math.random().toString() };
             }).filter(Boolean);
@@ -213,19 +210,19 @@ function NavIcon({ icon, active, onClick, size = 22 }) {
 function Home({ routines, history, setView, setSelectedRoutine }) {
   return (
     <div className="space-y-8 mt-4 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center"><h2 className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">Active Plans</h2></div>
+      <div className="flex justify-between items-center"><h2 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em]">Active Routines</h2></div>
       <div className="space-y-4">
         {routines.map(r => (
           <div key={r.id} onClick={() => { setSelectedRoutine(r); setView('preview'); }} className="bg-[#141414] rounded-[28px] border border-zinc-800/50 p-6 flex gap-6 cursor-pointer active:scale-95 transition-all">
               <div className="w-20 h-20 bg-zinc-900 rounded-2xl flex items-center justify-center text-4xl shrink-0">{r.exercises[0]?.icon || '🔥'}</div>
               <div className="flex flex-col justify-center flex-1">
-                <h3 className="text-xl font-bold mb-1">{r.name}</h3>
-                <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">{r.exercises.length} Exercises</p>
+                <h3 className="text-xl font-bold mb-1 tracking-tight">{r.name}</h3>
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{r.exercises.length} Exercises</p>
               </div>
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Create Plan</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Build Session</button>
       </div>
     </div>
   );
@@ -237,20 +234,20 @@ function RoutinePreview({ routine, onStart, onDelete, onBack, onShowTutorial }) 
       <div className="flex items-center gap-4"><button onClick={onBack} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest">PREVIEW</h2></div>
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-2xl">
         <div className="flex justify-between items-start">
-          <h3 className="text-3xl font-bold leading-none">{routine.name}</h3>
+          <h3 className="text-3xl font-bold leading-none tracking-tight">{routine.name}</h3>
           <button onClick={() => { if(confirm("Delete routine?")) onDelete(); }} className="p-3 text-rose-500 bg-rose-500/10 rounded-2xl active:bg-rose-500 active:text-white transition-all"><Trash2 size={20} /></button>
         </div>
         <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
           {routine.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50 group">
+            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50">
               <span className="text-2xl">{ex.icon}</span>
-              <div className="flex-1 font-bold text-sm">{ex.name}</div>
+              <div className="flex-1 font-bold text-sm tracking-tight">{ex.name}</div>
               <button onClick={() => onShowTutorial(ex.videoId)} className="p-2 text-zinc-600 hover:text-[#e8ff47] transition-colors"><Youtube size={18}/></button>
               <div className="text-xs font-bebas text-[#e8ff47] tracking-widest">{ex.type === 'time' ? `${ex.duration}S` : `${ex.count}R`}</div>
             </div>
           ))}
         </div>
-        <button onClick={onStart} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Play size={24} fill="currentColor" /> Start session</button>
+        <button onClick={onStart} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Play size={24} fill="currentColor" /> Start Session</button>
       </div>
     </div>
   );
@@ -266,7 +263,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
     if (isResting) setTimeLeft(15);
     else if (currentEx.type === 'time') setTimeLeft(currentEx.duration);
     else setTimeLeft(0); 
-  }, [workout.currentExIndex, isResting, currentEx.type, currentEx.duration]);
+  }, [workout.currentExIndex, isResting]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -283,7 +280,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, isResting, workout.currentExIndex, onFinish, currentEx.type]);
+  }, [isPaused, isResting, workout.currentExIndex, onFinish]);
 
   const skip = (dir) => {
      setIsResting(false);
@@ -299,14 +296,14 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       <div className="flex justify-between items-start">
         <button onClick={onCancel} className="text-zinc-600 active:text-white p-2 transition-colors"><X size={28} /></button>
         <div className="text-center">
-          <h2 className="font-bold text-xl">{isResting ? "RECOVERY" : currentEx.name}</h2>
+          <h2 className="font-bold text-xl tracking-tight">{isResting ? "RECOVERY" : currentEx.name}</h2>
           <p className="text-[10px] text-zinc-500 font-bold tracking-[0.3em] uppercase mt-1">{workout.currentExIndex + 1} / {workout.exercises.length}</p>
         </div>
         <button onClick={() => onShowTutorial(currentEx.videoId)} className="text-[#e8ff47] p-2 bg-[#e8ff47]/10 rounded-full active:scale-90 transition-transform"><Youtube size={24} /></button>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none select-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
+        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
         <div className="text-[150px] font-bebas leading-none tabular-nums tracking-widest text-white">{isResting || currentEx.type === 'time' ? `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}` : currentEx.count}</div>
         
         {isResting && (
@@ -330,10 +327,13 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
 function SelectionGroup({ label, options, active, onChange }) {
   return (
     <div className="space-y-3">
-      <div className="px-1"><p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p></div>
+      <div className="px-1 flex justify-between items-center">
+        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p>
+        <p className="text-[10px] font-black text-[#e8ff47] uppercase">{active}</p>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         {options.map(opt => (
-          <button key={opt} onClick={() => onChange(opt)} className={`px-4 py-3 rounded-xl text-xs font-bold transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black/50 text-zinc-500 border-zinc-800'}`}>{opt}</button>
+          <button key={opt} onClick={() => onChange(opt)} className={`px-4 py-3 rounded-xl text-[11px] font-bold transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black/50 text-zinc-500 border-zinc-800'}`}>{opt}</button>
         ))}
       </div>
     </div>
@@ -353,9 +353,9 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
       setSelected(res); setName(`${aiF} Build`);
-      notify("Session Generated!");
+      notify("AI Sync Complete");
     } catch (e) { 
-        const errMsg = e.message.includes("404") ? "AI Model Not Found (Check Vercel Config)" : e.message.includes("Key") ? "Gemini Key Missing" : "AI Busy. Try again.";
+        const errMsg = e.message.includes("404") ? "AI Endpoint Error (Vercel Setting?)" : e.message.includes("Key") ? "API Key Missing" : "AI Offline";
         notify(errMsg, "error"); 
     } finally { setIsAiLoading(false); }
   };
@@ -364,8 +364,10 @@ function Builder({ user, setView, generateWithAi, notify }) {
     setSelected(prev => prev.map(ex => ex.id === id ? { ...ex, [ex.type === 'time' ? 'duration' : 'count']: parseInt(val) || 0 } : ex));
   };
 
+  const filteredItems = EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
-    <div className="space-y-6 pt-4 animate-in slide-in-from-bottom duration-500">
+    <div className="space-y-6 pt-4 animate-in slide-in-from-bottom duration-500 pb-12">
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest">DESIGN</h2></div>
       
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-2xl">
@@ -376,7 +378,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
             <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
-        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">
+        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">
             {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan
         </button>
       </div>
@@ -388,7 +390,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
           {selected.map((ex) => (
             <div key={ex.id} className="bg-black p-4 rounded-xl flex flex-col gap-3 border border-zinc-800">
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="font-bold text-sm">{ex.name}</span></div>
+                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="font-bold text-sm tracking-tight">{ex.name}</span></div>
                     <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2"><Trash2 size={18} /></button>
                 </div>
                 <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-lg border border-zinc-800/50">
@@ -397,7 +399,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
                         onChange={(e) => updateEx(ex.id, e.target.value)}
-                        className="bg-transparent text-[#e8ff47] font-bebas text-2xl w-full outline-none"
+                        className="bg-transparent text-[#e8ff47] font-bebas text-3xl w-full outline-none leading-none"
                     />
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{ex.type === 'time' ? 'Secs' : 'Reps'}</span>
                 </div>
@@ -405,18 +407,32 @@ function Builder({ user, setView, generateWithAi, notify }) {
           ))}
         </div>
 
-        <div className="relative"><input placeholder="Find movements..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" /><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} /></div>
-        {search && <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">{EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).map(ex => (
-          <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl"><div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div><Plus size={18} className="text-[#e8ff47]" /></button>
-        ))}</div>}
+        <div className="relative">
+            <input placeholder="Find movements..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+        </div>
+        
+        {search && (
+            <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">
+                {filteredItems.map(ex => (
+                <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl active:border-[#e8ff47] transition-colors">
+                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div>
+                    <Plus size={18} className="text-[#e8ff47]" />
+                </button>
+                ))}
+            </div>
+        )}
       </div>
-      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">Save Session</button>
+
+      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">
+        Save Plan
+      </button>
     </div>
   );
 }
 
 function HistoryView({ history }) {
-  return (<div className="space-y-6 pt-4 animate-in fade-in duration-500"><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">LOGS</h2><div className="grid gap-4">{history.map(h => (<div key={h.id} className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 flex justify-between items-center shadow-lg"><div><h4 className="font-bold text-lg mb-1">{h.name}</h4><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{new Date(h.date).toLocaleDateString()} • {h.duration} MIN</p></div><div className="text-right text-[#e8ff47] font-bebas text-3xl">{h.calories} KCAL</div></div>))}</div></div>);
+  return (<div className="space-y-6 pt-4 animate-in fade-in duration-500"><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">LOGS</h2><div className="grid gap-4">{history.map(h => (<div key={h.id} className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 flex justify-between items-center shadow-lg"><div><h4 className="font-bold text-lg mb-1 tracking-tight">{h.name}</h4><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{new Date(h.date).toLocaleDateString()} • {h.duration} MIN</p></div><div className="text-right text-[#e8ff47] font-bebas text-4xl">{h.calories} KCAL</div></div>))}</div></div>);
 }
 
 function Stats({ history }) {
