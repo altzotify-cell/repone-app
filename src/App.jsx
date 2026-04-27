@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
   initializeFirestore, collection, doc, onSnapshot, 
-  addDoc, deleteDoc, persistentLocalCache, persistentMultipleTabManager, updateDoc 
+  addDoc, deleteDoc, persistentLocalCache, persistentMultipleTabManager 
 } from 'firebase/firestore';
 import { 
   getAuth, signInAnonymously, onAuthStateChanged 
@@ -15,11 +15,11 @@ import {
   Clock, Dumbbell, Trash2, X, PlusCircle, 
   ChevronLeft, Layout, Zap, Timer as TimerIcon, 
   Flame, Award, Search, Pause, SkipForward, SkipBack, Info, Sparkles, Settings as SettingsIcon,
-  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset, Edit3
+  Wand2, Loader2, Target, BarChart, AlertCircle, CheckCircle2, Coffee, ChevronRight, Youtube, TimerReset, Edit3, MoveRight
 } from 'lucide-react';
 
 // --- Environment Variable Helper ---
-const getEnv = (key, fallback = "") => {
+const getViteEnv = (key, fallback = "") => {
   try {
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
       return import.meta.env[key];
@@ -30,12 +30,12 @@ const getEnv = (key, fallback = "") => {
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-  apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
-  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
-  projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
-  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
-  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
-  appId: getEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
+  apiKey: getViteEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
+  authDomain: getViteEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
+  projectId: getViteEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
+  storageBucket: getViteEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
+  messagingSenderId: getViteEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
+  appId: getViteEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
 };
 
 const app = initializeApp(firebaseConfig);
@@ -44,15 +44,17 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v3';
+const appId = 'repone-pro-v4';
 
 // --- MEGA Exercise Library ---
 const EXERCISE_LIBRARY = [
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
   { id: 'ch2', name: 'Wide Grip Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
+  { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
+  { id: 'sh3', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
   { id: 'ba1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
   { id: 'ba3', name: 'Inverted Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
@@ -61,8 +63,10 @@ const EXERCISE_LIBRARY = [
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
 ];
 
-const geminiKey = getEnv('VITE_GEMINI_API_KEY', "");
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiKey}`;
+// --- AI Setup ---
+const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
+// Fixed URL: Using gemini-1.5-flash for broader API Key compatibility (solves 404 errors)
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
   if (!geminiKey) throw new Error("API Key Missing");
@@ -74,9 +78,12 @@ const callGemini = async (prompt, system) => {
       systemInstruction: { parts: [{ text: system }] } 
     })
   });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error?.message || "AI Error");
+  }
   const data = await res.json();
-  if (!data.candidates) throw new Error("API Error");
-  return data.candidates[0].content.parts[0].text;
+  return data.candidates?.[0]?.content?.parts?.[0]?.text;
 };
 
 export default function App() {
@@ -94,7 +101,9 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (!u) await signInAnonymously(auth);
+      if (!u) {
+        try { await signInAnonymously(auth); } catch (e) { console.error("Auth failed"); }
+      }
       setUser(auth.currentUser);
       setIsLoading(false);
     });
@@ -110,7 +119,7 @@ export default function App() {
     return () => { unsubR(); unsubH(); };
   }, [user]);
 
-  const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3000); };
+  const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 4000); };
 
   const startWorkout = (routine) => {
     setActiveWorkout({
@@ -123,8 +132,8 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`3 tips for ${routine.name}. Max 30 words.`, "Pro Trainer")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
+       callGemini(`3 very short tips for ${routine.name}.`, "Fitness Coach. Max 25 words.")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Push yourself today!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -174,8 +183,8 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}].`;
-            const text = await callGemini(prompt, "Workout generator. Exercises: " + EXERCISE_LIBRARY.map(e=>e.name).join(','));
+            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}]. Use these movements: ${EXERCISE_LIBRARY.map(e=>e.name).join(',')}`;
+            const text = await callGemini(prompt, "You are a workout JSON generator. Output only the array.");
             const match = text.match(/\[.*\]/s);
             if (!match) return [];
             const parsed = JSON.parse(match[0]);
@@ -216,7 +225,7 @@ function Home({ routines, history, setView, setSelectedRoutine }) {
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Build Workout Plan</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Create Plan</button>
       </div>
     </div>
   );
@@ -231,9 +240,9 @@ function RoutinePreview({ routine, onStart, onDelete, onBack, onShowTutorial }) 
           <h3 className="text-3xl font-bold leading-none">{routine.name}</h3>
           <button onClick={() => { if(confirm("Delete routine?")) onDelete(); }} className="p-3 text-rose-500 bg-rose-500/10 rounded-2xl active:bg-rose-500 active:text-white transition-all"><Trash2 size={20} /></button>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
           {routine.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50">
+            <div key={i} className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-zinc-800/50 group">
               <span className="text-2xl">{ex.icon}</span>
               <div className="flex-1 font-bold text-sm">{ex.name}</div>
               <button onClick={() => onShowTutorial(ex.videoId)} className="p-2 text-zinc-600 hover:text-[#e8ff47] transition-colors"><Youtube size={18}/></button>
@@ -241,7 +250,7 @@ function RoutinePreview({ routine, onStart, onDelete, onBack, onShowTutorial }) 
             </div>
           ))}
         </div>
-        <button onClick={onStart} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Play size={24} fill="currentColor" /> Start Workout</button>
+        <button onClick={onStart} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Play size={24} fill="currentColor" /> Start session</button>
       </div>
     </div>
   );
@@ -321,18 +330,10 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
 function SelectionGroup({ label, options, active, onChange }) {
   return (
     <div className="space-y-3">
-      <div className="flex justify-between items-center px-1">
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="px-1"><p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p></div>
+      <div className="grid grid-cols-2 gap-2">
         {options.map(opt => (
-          <button
-            key={opt}
-            onClick={() => onChange(opt)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-[#141414] text-zinc-400 border-zinc-800'}`}
-          >
-            {opt}
-          </button>
+          <button key={opt} onClick={() => onChange(opt)} className={`px-4 py-3 rounded-xl text-xs font-bold transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black/50 text-zinc-500 border-zinc-800'}`}>{opt}</button>
         ))}
       </div>
     </div>
@@ -351,35 +352,32 @@ function Builder({ user, setView, generateWithAi, notify }) {
     setIsAiLoading(true);
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
-      setSelected(res); setName(`${aiF} Focus`);
+      setSelected(res); setName(`${aiF} Build`);
+      notify("Session Generated!");
     } catch (e) { 
-        const errMsg = e.message === "API Key Missing" ? "Missing Gemini API Key in Vercel" : "AI Busy. Try again.";
+        const errMsg = e.message.includes("404") ? "AI Model Not Found (Check Vercel Config)" : e.message.includes("Key") ? "Gemini Key Missing" : "AI Busy. Try again.";
         notify(errMsg, "error"); 
     } finally { setIsAiLoading(false); }
   };
 
-  const updateExercise = (id, field, value) => {
-    setSelected(prev => prev.map(ex => ex.id === id ? { ...ex, [field]: value } : ex));
+  const updateEx = (id, val) => {
+    setSelected(prev => prev.map(ex => ex.id === id ? { ...ex, [ex.type === 'time' ? 'duration' : 'count']: parseInt(val) || 0 } : ex));
   };
 
   return (
     <div className="space-y-6 pt-4 animate-in slide-in-from-bottom duration-500">
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest">DESIGN</h2></div>
       
-      {/* GEMINI AI ENGINE */}
-      <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-6 shadow-2xl">
-        <div className="flex items-center gap-2 text-[#e8ff47] text-[10px] uppercase font-black tracking-widest">
-            <Sparkles size={16} fill="currentColor" /> Gemini AI Engine
-        </div>
+      <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-2xl">
+        <div className="flex items-center gap-2 text-[#e8ff47] text-[10px] uppercase font-black tracking-widest"><Sparkles size={16} fill="currentColor" /> Gemini AI Engine</div>
         
-        <div className="space-y-4">
-            <SelectionGroup label="Fitness Level" options={['Beginner', 'Advanced']} active={aiL} onChange={setAiL} />
-            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper', 'Lower']} active={aiF} onChange={setAiF} />
+        <div className="grid gap-6">
+            <SelectionGroup label="Fitness Level" options={['Beginner', 'Intermediate', 'Advanced']} active={aiL} onChange={setAiL} />
+            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
         <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">
-            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} 
-            Generate Plan
+            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan
         </button>
       </div>
 
@@ -388,49 +386,31 @@ function Builder({ user, setView, generateWithAi, notify }) {
         
         <div className="space-y-3">
           {selected.map((ex) => (
-            <div key={ex.id} className="bg-black p-4 rounded-xl flex flex-col gap-3 border border-zinc-800 animate-in slide-in-from-right-2">
+            <div key={ex.id} className="bg-black p-4 rounded-xl flex flex-col gap-3 border border-zinc-800">
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xl">{ex.icon}</span>
-                        <span className="font-bold text-sm">{ex.name}</span>
-                    </div>
+                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="font-bold text-sm">{ex.name}</span></div>
                     <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2"><Trash2 size={18} /></button>
                 </div>
-                <div className="flex items-center gap-4 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800/50">
+                <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-lg border border-zinc-800/50">
                     <Edit3 size={14} className="text-zinc-500" />
-                    <label className="text-[10px] font-black uppercase text-zinc-500 shrink-0">Set Target:</label>
                     <input 
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
-                        onChange={(e) => updateExercise(ex.id, ex.type === 'time' ? 'duration' : 'count', parseInt(e.target.value) || 0)}
-                        className="bg-transparent text-[#e8ff47] font-bebas text-xl w-full outline-none"
+                        onChange={(e) => updateEx(ex.id, e.target.value)}
+                        className="bg-transparent text-[#e8ff47] font-bebas text-2xl w-full outline-none"
                     />
-                    <span className="text-[10px] font-black text-zinc-500 uppercase">{ex.type === 'time' ? 'Secs' : 'Reps'}</span>
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{ex.type === 'time' ? 'Secs' : 'Reps'}</span>
                 </div>
             </div>
           ))}
         </div>
 
-        <div className="relative">
-            <input placeholder="Search Exercise..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" />
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-        </div>
-        
-        {search && (
-            <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">
-                {EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).map(ex => (
-                <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl active:border-[#e8ff47] transition-colors">
-                    <div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div>
-                    <Plus size={18} className="text-[#e8ff47]" />
-                </button>
-                ))}
-            </div>
-        )}
+        <div className="relative"><input placeholder="Find movements..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-black border border-zinc-800 p-5 pl-14 rounded-2xl text-sm outline-none focus:border-[#e8ff47] transition-all" /><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" size={18} /></div>
+        {search && <div className="grid gap-2 max-h-48 overflow-y-auto pt-2">{EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).map(ex => (
+          <button key={ex.id} onClick={() => { setSelected([...selected, { ...ex, id: Math.random().toString() }]); setSearch(''); }} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl"><div className="flex items-center gap-3"><span className="text-xl">{ex.icon}</span><span className="text-sm font-bold">{ex.name}</span></div><Plus size={18} className="text-[#e8ff47]" /></button>
+        ))}</div>}
       </div>
-
-      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">
-        Save Plan
-      </button>
+      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl">Save Session</button>
     </div>
   );
 }
