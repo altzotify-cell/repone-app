@@ -102,8 +102,8 @@ const EXERCISE_LIBRARY = [
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// FIXED ENDPOINT for v1 stable
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+// FIXED ENDPOINT: Changed v1beta to v1 stable to resolve model compatibility issues
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
   if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
@@ -113,9 +113,9 @@ const callGemini = async (prompt, system) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
       contents: [{ parts: [{ text: prompt }] }], 
-      // FIX: Use snake_case for system_instruction
+      // Using snake_case for system_instruction is correct for v1 as well
       system_instruction: { parts: [{ text: system }] },
-      // ADD: This forces the model to output valid JSON
+      // Forces the model to output valid JSON
       generationConfig: {
         response_mime_type: "application/json",
       }
@@ -234,7 +234,7 @@ export default function App() {
 
             const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
             
-            // 2. Direct parsing (Regex usually isn't needed if using response_mime_type)
+            // 2. Direct parsing
             try {
               const parsed = JSON.parse(text);
               
@@ -367,7 +367,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
+        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none select-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
         <div className="text-[150px] font-bebas leading-none tabular-nums tracking-widest text-white">{isResting || currentEx.type === 'time' ? `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}` : currentEx.count}</div>
         
         {isResting && (
