@@ -38,48 +38,97 @@ const firebaseConfig = {
   appId: getViteEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
 };
 
-// Singleton Init to prevent "App already exists" crashes
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v6';
+const appId = 'repone-pro-v7';
 
-// --- Verified Exercise Library (Working YouTube IDs) ---
+// --- EXPANDED Exercise Library (Basic & Complex) ---
 const EXERCISE_LIBRARY = [
-  { id: 'ch1', name: 'Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
+  // CHEST
+  { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
   { id: 'ch2', name: 'Wide Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
   { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
+  { id: 'ch6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
+  { id: 'ch7', name: 'Explosive Push-Ups', muscle: 'Chest', icon: '👏', type: 'reps', count: 8, duration: 0, videoId: '8223v8i8-kE' },
+  { id: 'ch8', name: 'Chest Dips', muscle: 'Chest', icon: '📉', type: 'reps', count: 10, duration: 0, videoId: '2z8JmcrW-As' },
+  { id: 'ch9', name: 'Pseudo Planche Push-Ups', muscle: 'Chest', icon: '🤸', type: 'reps', count: 8, duration: 0, videoId: 'Wunidm38-iM' },
+  
+  // SHOULDERS
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
-  { id: 'sh3', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
+  { id: 'sh2', name: 'Elevated Pike Push-Ups', muscle: 'Shoulders', icon: '🪜', type: 'reps', count: 8, duration: 0, videoId: '1pG0LOnpU_Q' },
+  { id: 'sh3', name: 'Handstand Holds', muscle: 'Shoulders', icon: '🤸', type: 'time', count: 0, duration: 30, videoId: 'vV_6Y99XF_E' },
+  { id: 'sh4', name: 'Shoulder Taps', muscle: 'Shoulders', icon: '🖐️', type: 'time', count: 0, duration: 45, videoId: 'geSshv9EovM' },
+  { id: 'sh5', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸‍♂️', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
+  
+  // BACK
   { id: 'ba1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
-  { id: 'ba3', name: 'Inverted Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
+  { id: 'ba2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
+  { id: 'ba3', name: 'Australian Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
+  { id: 'ba4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
+  { id: 'ba5', name: 'Scapular Pull-Ups', muscle: 'Back', icon: '🦴', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
+
+  // ARMS
+  { id: 'ar1', name: 'Bench Dips', muscle: 'Arms', icon: '🪑', type: 'reps', count: 15, duration: 0, videoId: '0326dy_-CzM' },
+  { id: 'ar2', name: 'Close-Grip Pushups', muscle: 'Arms', icon: '💎', type: 'reps', count: 12, duration: 0, videoId: 'Me9bHFAxn8c' },
+  { id: 'ar3', name: 'Headbangers', muscle: 'Arms', icon: '🎸', type: 'reps', count: 10, duration: 0, videoId: 'brhRXlOhsAM' },
+
+  // CORE
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
-  { id: 'co3', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
+  { id: 'co2', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
+  { id: 'co3', name: 'Leg Raises', muscle: 'Core', icon: '🦿', type: 'reps', count: 15, duration: 0, videoId: 'HD1Q267V2EE' },
+  { id: 'co4', name: 'Hollow Body Hold', muscle: 'Core', icon: '🌙', type: 'time', count: 0, duration: 45, videoId: 'LlV8_fGhb-0' },
+  { id: 'co5', name: 'Bicycle Crunches', muscle: 'Core', icon: '🚲', type: 'reps', count: 20, duration: 0, videoId: 'Iwyvozckjak' },
+  { id: 'co6', name: 'L-Sit Hold', muscle: 'Core', icon: '🅻', type: 'time', count: 0, duration: 15, videoId: '6UIs0K-hXmU' },
+  
+  // LEGS
   { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
+  { id: 'le2', name: 'Walking Lunges', muscle: 'Legs', icon: '🚶', type: 'reps', count: 20, duration: 0, videoId: 'L8fyJhZoQn8' },
+  { id: 'le3', name: 'Bulgarian Split Squats', muscle: 'Legs', icon: '🇧🇬', type: 'reps', count: 12, duration: 0, videoId: '2C-uNgKwPLE' },
   { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
+  { id: 'le5', name: 'Glute Bridges', muscle: 'Legs', icon: '🌉', type: 'reps', count: 20, duration: 0, videoId: 'wPM8icPu6H8' },
+  { id: 'le6', name: 'Calf Raises', muscle: 'Legs', icon: '🦶', type: 'reps', count: 25, duration: 0, videoId: 'gwLzBJYoWlM' },
+  
+  // FULL BODY
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
+  { id: 'fb2', name: 'Jump Squats', muscle: 'Full Body', icon: '⬆️', type: 'reps', count: 15, duration: 0, videoId: '72BSZupb-1I' },
+  { id: 'fb3', name: 'Muscle-Ups', muscle: 'Full Body', icon: '🚀', type: 'reps', count: 5, duration: 0, videoId: 'Yvj_6N8_0V0' },
+  { id: 'fb4', name: 'Mountain Climbers', muscle: 'Full Body', icon: '⛰️', type: 'time', count: 0, duration: 30, videoId: 'zT-9L37Re_8' },
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
+// FIXED ENDPOINT for v1 stable
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
-  if (!geminiKey) throw new Error("API Key Missing");
+  if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
+  
   const res = await fetch(GEMINI_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
       contents: [{ parts: [{ text: prompt }] }], 
-      systemInstruction: { parts: [{ text: system }] } 
+      // FIX: Use snake_case for system_instruction
+      system_instruction: { parts: [{ text: system }] },
+      // ADD: This forces the model to output valid JSON
+      generationConfig: {
+        response_mime_type: "application/json",
+      }
     })
   });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    console.error("Gemini API Error:", errorData);
+    throw new Error(errorData.error?.message || `HTTP ${res.status}`);
+  }
+
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
   return data.candidates?.[0]?.content?.parts?.[0]?.text;
 };
 
@@ -118,7 +167,7 @@ export default function App() {
     } catch (e) { console.error("Firestore access error"); }
   }, [user]);
 
-  const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 4000); };
+  const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 5000); };
 
   const startWorkout = (routine) => {
     setActiveWorkout({
@@ -131,8 +180,8 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`3 trainer tips for ${routine.name}.`, "Pro Fitness Coach. Max 25 words.")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Push yourself today!")).finally(() => setIsGeneratingTips(false));
+       callGemini(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 25 words.")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -178,16 +227,33 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY valid JSON: [{"name":"Exercise Name","value":12}]. Use these movements: ${EXERCISE_LIBRARY.map(e=>e.name).join(',')}`;
-            const text = await callGemini(prompt, "You are a clean JSON generator. No markdown. No text. Only [{},{}] array.");
-            const match = text.match(/\[.*\]/s);
-            if (!match) return [];
-            const parsed = JSON.parse(match[0]);
-            return parsed.map(item => {
-              const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase().includes(item.name.toLowerCase()));
-              if (!libMatch) return null;
-              return { ...libMatch, duration: libMatch.type === 'time' ? item.value : 0, count: libMatch.type === 'reps' ? item.value : 0, id: Math.random().toString() };
-            }).filter(Boolean);
+            // 1. More specific prompt
+            const prompt = `Generate a list of exercises for a ${opts.level} level ${opts.focus} workout. 
+            Use only these exercise names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
+            Return an array of objects with "name" and "value" (reps or seconds).`;
+
+            const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
+            
+            // 2. Direct parsing (Regex usually isn't needed if using response_mime_type)
+            try {
+              const parsed = JSON.parse(text);
+              
+              return parsed.map(item => {
+                const libMatch = EXERCISE_LIBRARY.find(ex => 
+                  ex.name.toLowerCase() === item.name.toLowerCase()
+                );
+                if (!libMatch) return null;
+                return { 
+                  ...libMatch, 
+                  duration: libMatch.type === 'time' ? (item.value || 30) : 0, 
+                  count: libMatch.type === 'reps' ? (item.value || 10) : 0, 
+                  id: Math.random().toString(36).substr(2, 9) 
+                };
+              }).filter(Boolean);
+            } catch (e) {
+              console.error("Parsing error:", e);
+              return [];
+            }
         }} />}
       </main>
 
@@ -301,7 +367,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none select-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
+        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
         <div className="text-[150px] font-bebas leading-none tabular-nums tracking-widest text-white">{isResting || currentEx.type === 'time' ? `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}` : currentEx.count}</div>
         
         {isResting && (
@@ -351,10 +417,10 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
       setSelected(res); setName(`${aiF} Build`);
-      notify("AI Routine Sync Complete");
+      notify("AI Engine Sync Successful");
     } catch (e) { 
-        const errMsg = e.message.includes("404") ? "Link Missing Gemini Key" : e.message.includes("Key") ? "Gemini API Key Required" : "AI Sync Error";
-        notify(errMsg, "error"); 
+        // Showing actual technical error in popup
+        notify(`AI Error: ${e.message}`, "error"); 
     } finally { setIsAiLoading(false); }
   };
 
@@ -365,10 +431,9 @@ function Builder({ user, setView, generateWithAi, notify }) {
   const filteredItems = EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-10 pt-4 animate-in slide-in-from-bottom duration-500 pb-20">
-      <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest">DESIGN</h2></div>
+    <div className="space-y-10 pt-4 animate-in slide-in-from-bottom duration-500 pb-24">
+      <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">DESIGN</h2></div>
       
-      {/* IMPROVED AI ENGINE - SPACIOUS GRID */}
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-10 shadow-2xl border-t-2 border-t-[#007AFF]/20">
         <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini Pro AI</div>
         
@@ -377,15 +442,15 @@ function Builder({ user, setView, generateWithAi, notify }) {
             <SelectionGroup label="Target" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
-        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/20 shadow-xl border-b-4 border-b-blue-700">
+        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/20 shadow-xl border-b-4 border-b-blue-700">
             {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Smart Plan
         </button>
       </div>
 
-      <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8">
+      <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-xl">
         <div className="space-y-2">
             <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-2">Plan Name</p>
-            <input placeholder="Ex: Morning Power" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
+            <input placeholder="Ex: Muscle Maker" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
         </div>
         
         <div className="space-y-4">
@@ -393,7 +458,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
             <div key={ex.id} className="bg-black p-5 rounded-2xl flex flex-col gap-4 border border-zinc-800/50 shadow-inner">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3"><span className="text-2xl">{ex.icon}</span><span className="font-bold text-sm tracking-tight">{ex.name}</span></div>
-                    <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2"><Trash2 size={18} /></button>
+                    <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2 active:scale-90"><Trash2 size={18} /></button>
                 </div>
                 <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
                     <Edit3 size={16} className="text-zinc-600" />
@@ -426,8 +491,8 @@ function Builder({ user, setView, generateWithAi, notify }) {
         )}
       </div>
 
-      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl border-b-4 border-b-lime-600">
-        Confirm Plan
+      <button onClick={async () => { if(!name || !selected.length || !db) return; await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'routines'), { name, exercises: selected, created: Date.now() }); setView('home'); }} className="w-full py-6 bg-[#e8ff47] text-black rounded-[28px] font-black text-xl uppercase active:scale-95 transition-all shadow-[#e8ff47]/10 shadow-xl border-b-4 border-b-lime-600 mb-10">
+        Commit Plan
       </button>
     </div>
   );
@@ -453,7 +518,7 @@ function Stats({ history }) {
             </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Total KCAL</p><p className="font-bebas text-4xl text-[#e8ff47]">{history.reduce((a,c)=>a+parseFloat(c.calories||0),0).toFixed(0)}</p></div>
+            <div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Total Burn</p><p className="font-bebas text-4xl text-[#e8ff47]">{history.reduce((a,c)=>a+parseFloat(c.calories||0),0).toFixed(0)}</p></div>
             <div className="bg-[#141414] p-6 rounded-[28px] border border-zinc-800/50 text-center shadow-lg"><p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest mb-1">Active Days</p><p className="font-bebas text-4xl text-[#e8ff47]">{[...new Set(history.map(h => new Date(h.date).toDateString()))].length}</p></div>
         </div>
     </div>
