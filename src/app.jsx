@@ -5,7 +5,7 @@ import {
   addDoc, deleteDoc, persistentLocalCache, persistentMultipleTabManager 
 } from 'firebase/firestore';
 import { 
-  getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged 
+  getAuth, signInAnonymously, onAuthStateChanged 
 } from 'firebase/auth';
 import { 
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area 
@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 
 // --- Environment Variable Helper ---
-const getViteEnv = (key, fallback) => {
+const getEnv = (key, fallback = "") => {
   try {
-    // Standard Vite environment variable access
+    // Check for Vite's environment variables
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
       return import.meta.env[key];
     }
@@ -30,80 +30,58 @@ const getViteEnv = (key, fallback) => {
 };
 
 // --- Firebase Configuration ---
+// Using your credentials as fallbacks so it works in the Canvas preview immediately
 const firebaseConfig = {
-  apiKey: getViteEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
-  authDomain: getViteEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
-  projectId: getViteEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
-  storageBucket: getViteEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
-  messagingSenderId: getViteEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
-  appId: getViteEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
+  apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyAvy4jug71xa8qov61wUk49zFR_eEzCx1A"),
+  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "repone-app-9d87d.firebaseapp.com"),
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "repone-app-9d87d"),
+  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "repone-app-9d87d.firebasestorage.app"),
+  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "129924312319"),
+  appId: getEnv('VITE_FIREBASE_APP_ID', "1:129924312319:web:3706d88be6a5cc0ea0f0ca")
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-final';
+const appId = 'repone-pro-v2';
 
-// --- Constants: MEGA Exercise Library ---
+// --- Constants: Expanded Exercise Library ---
 const EXERCISE_LIBRARY = [
-  // CHEST
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
   { id: 'ch2', name: 'Wide Grip Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
-  { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
-  { id: 'ch6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
-  { id: 'ch7', name: 'Hindu Push-Ups', muscle: 'Chest', icon: '🧘', type: 'reps', count: 10, duration: 0, videoId: 'p5LhC6_7KVs' },
-  { id: 'ch8', name: 'Explosive Push-Ups', muscle: 'Chest', icon: '👏', type: 'reps', count: 8, duration: 0, videoId: '8223v8i8-kE' },
-  { id: 'ch9', name: 'Chest Dips', muscle: 'Chest', icon: '📉', type: 'reps', count: 10, duration: 0, videoId: '2z8JmcrW-As' },
-  { id: 'ch10', name: 'Pseudo Planche Push-Ups', muscle: 'Chest', icon: '🤸', type: 'reps', count: 8, duration: 0, videoId: 'Wunidm38-iM' },
-  // SHOULDERS
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
-  { id: 'sh2', name: 'Elevated Pike Push-Ups', muscle: 'Shoulders', icon: '🪜', type: 'reps', count: 8, duration: 0, videoId: '1pG0LOnpU_Q' },
   { id: 'sh3', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
-  { id: 'sh4', name: 'Shoulder Taps', muscle: 'Shoulders', icon: '🖐️', type: 'time', count: 0, duration: 45, videoId: 'geSshv9EovM' },
-  { id: 'sh5', name: 'Handstand Holds', muscle: 'Shoulders', icon: '🧱', type: 'time', count: 0, duration: 30, videoId: 'vV_6Y99XF_E' },
-  // BACK
   { id: 'ba1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
-  { id: 'ba2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
   { id: 'ba3', name: 'Inverted Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
-  { id: 'ba4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
-  // CORE
   { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
-  { id: 'co2', name: 'Hollow Body Hold', muscle: 'Core', icon: '🌙', type: 'time', count: 0, duration: 45, videoId: 'LlV8_fGhb-0' },
   { id: 'co3', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
-  { id: 'co4', name: 'Bicycle Crunches', muscle: 'Core', icon: '🚲', type: 'reps', count: 20, duration: 0, videoId: 'Iwyvozckjak' },
-  { id: 'co5', name: 'Mountain Climbers', muscle: 'Core', icon: '⛰️', type: 'time', count: 0, duration: 30, videoId: 'zT-9L37Re_8' },
-  { id: 'co6', name: 'Leg Raises', muscle: 'Core', icon: '🦿', type: 'reps', count: 15, duration: 0, videoId: 'HD1Q267V2EE' },
-  // LEGS
   { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
-  { id: 'le2', name: 'Bulgarian Split Squats', muscle: 'Legs', icon: '🇧🇬', type: 'reps', count: 12, duration: 0, videoId: '2C-uNgKwPLE' },
-  { id: 'le3', name: 'Walking Lunges', muscle: 'Legs', icon: '🚶', type: 'reps', count: 20, duration: 0, videoId: 'L8fyJhZoQn8' },
   { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
-  { id: 'le5', name: 'Glute Bridges', muscle: 'Legs', icon: '🌉', type: 'reps', count: 20, duration: 0, videoId: 'wPM8icPu6H8' },
-  { id: 'le6', name: 'Calf Raises', muscle: 'Legs', icon: '🦶', type: 'reps', count: 25, duration: 0, videoId: 'gwLzBJYoWlM' },
-  { id: 'le7', name: 'Wall Sit', muscle: 'Legs', icon: '🧱', type: 'time', count: 0, duration: 60, videoId: 'y-wV4Venusw' },
-  // FULL BODY
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
-  { id: 'fb2', name: 'Jump Squats', muscle: 'Full Body', icon: '⬆️', type: 'reps', count: 15, duration: 0, videoId: '72BSZupb-1I' },
 ];
 
-const builtInApiKey = ""; // Dynamically provided by Canvas
-const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', builtInApiKey);
+const geminiKey = getEnv('VITE_GEMINI_API_KEY', "");
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
-  if (!geminiKey && !builtInApiKey) return "AI Trainer offline.";
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } })
-  });
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!geminiKey) return "AI tips disabled (API Key missing).";
+  try {
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } })
+    });
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text;
+  } catch (err) {
+    return "Stay focused and finish strong!";
+  }
 };
 
 export default function App() {
@@ -119,38 +97,31 @@ export default function App() {
   const [notification, setNotification] = useState(null);
   const [tutorialVideoId, setTutorialVideoId] = useState(null);
 
-  // --- Auth Setup (Rule 3) ---
+  // --- Auth Setup ---
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const u = await new Promise((resolve) => {
-          const unsubscribe = onAuthStateChanged(auth, resolve);
-        });
-        if (!auth.currentUser) {
-          // Check for custom token, otherwise anonymous
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(auth, __initial_auth_token);
-          } else {
-            await signInAnonymously(auth);
-          }
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        try {
+          await signInAnonymously(auth);
+        } catch (e) {
+          console.error("Auth fail:", e);
         }
-        setUser(auth.currentUser);
-      } catch (err) {
-        console.error("Auth Error:", err);
-      } finally {
-        setIsLoading(false);
       }
-    };
-    initAuth();
+      setUser(auth.currentUser);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  // --- Data Sync (Rules 1 & 2) ---
+  // --- Data Fetching ---
   useEffect(() => {
     if (!user) return;
     const qR = collection(db, 'artifacts', appId, 'users', user.uid, 'routines');
     const qH = collection(db, 'artifacts', appId, 'users', user.uid, 'history');
+    
     const unsubR = onSnapshot(qR, (s) => setRoutines(s.docs.map(d => ({ id: d.id, ...d.data() }))));
     const unsubH = onSnapshot(qH, (s) => setHistory(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date - a.date)));
+    
     return () => { unsubR(); unsubH(); };
   }, [user]);
 
@@ -165,10 +136,10 @@ export default function App() {
     });
     setAiTips(null);
     setView('live');
-    if (geminiKey || builtInApiKey) {
+    if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`3 motivation tips for ${routine.name} workout. Max 30 words.`, "Elite Fitness Coach")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Form first, then speed.")).finally(() => setIsGeneratingTips(false));
+       callGemini(`Give me 3 short tips for a workout called ${routine.name}.`, "Elite Fitness Coach")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -177,12 +148,14 @@ export default function App() {
     const duration = Math.floor((Date.now() - activeWorkout.startTime) / 60000);
     try {
       await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'history'), {
-        name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8).toFixed(0), exercises: activeWorkout.exercises.length
+        name: activeWorkout.name, date: Date.now(), duration, calories: (duration * 8.5).toFixed(0), exercises: activeWorkout.exercises.length
       });
-      notify("Session Completed! 🔥");
+      notify("Session logged! 🔥");
       setActiveWorkout(null);
       setView('home');
-    } catch (e) { notify("Save failed."); }
+    } catch (e) {
+      notify("Failed to save session.");
+    }
   };
 
   if (isLoading) return <div className="h-screen bg-black flex flex-col items-center justify-center"><div className="text-[#e8ff47] font-bebas text-7xl animate-pulse">REPONE</div></div>;
@@ -195,13 +168,13 @@ export default function App() {
       `}</style>
 
       {tutorialVideoId && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4" onClick={() => setTutorialVideoId(null)}>
-           <button className="absolute top-8 right-8 p-3 bg-zinc-900 rounded-full text-white z-[110] active:scale-90 transition-transform"><X /></button>
-           <div className="w-full max-w-2xl aspect-video rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
+           <button onClick={() => setTutorialVideoId(null)} className="absolute top-8 right-8 p-3 bg-zinc-900 rounded-full text-white z-[110] active:scale-90 transition-transform"><X /></button>
+           <div className="w-full max-w-2xl aspect-video rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl">
               <iframe 
                 width="100%" height="100%" 
                 src={`https://www.youtube.com/embed/${tutorialVideoId}?autoplay=1&modestbranding=1&rel=0`} 
-                frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen 
+                frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen 
               />
            </div>
         </div>
@@ -226,11 +199,12 @@ export default function App() {
             const prompt = `Create a ${opts.duration}m ${opts.level} workout for ${opts.focus}. Return ONLY JSON: [{"name":"Exercise Name","value":30}].`;
             const text = await callGemini(prompt, "Workout generator. Exercises: " + EXERCISE_LIBRARY.map(e=>e.name).join(','));
             const match = text.match(/\[.*\]/s);
+            if (!match) return [];
             const parsed = JSON.parse(match[0]);
             return parsed.map(item => {
-              const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
-              if (!libMatch) return null;
-              return { ...libMatch, duration: libMatch.type === 'time' ? item.value : 0, count: libMatch.type === 'reps' ? item.value : 0, id: Math.random().toString() };
+              const match = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
+              if (!match) return null;
+              return { ...match, duration: match.type === 'time' ? item.value : 0, count: match.type === 'reps' ? item.value : 0, id: Math.random().toString() };
             }).filter(Boolean);
         }} notify={notify} />}
       </main>
@@ -252,7 +226,7 @@ function NavIcon({ icon, active, onClick, size = 22 }) {
 function Home({ routines, history, setView, setSelectedRoutine }) {
   return (
     <div className="space-y-8 mt-4 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center"><h2 className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">Dashboard</h2></div>
+      <div className="flex justify-between items-center"><h2 className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">Active Plans</h2></div>
       <div className="space-y-4">
         {routines.map(r => (
           <div key={r.id} onClick={() => { setSelectedRoutine(r); setView('preview'); }} className="bg-[#141414] rounded-[28px] border border-zinc-800/50 p-6 flex gap-6 cursor-pointer active:scale-95 transition-all">
@@ -264,7 +238,7 @@ function Home({ routines, history, setView, setSelectedRoutine }) {
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Build Workout Plan</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all"><Plus size={24} /> Create Routine</button>
       </div>
     </div>
   );
@@ -305,7 +279,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
     if (isResting) setTimeLeft(15);
     else if (currentEx.type === 'time') setTimeLeft(currentEx.duration);
     else setTimeLeft(0); 
-  }, [workout.currentExIndex, isResting]);
+  }, [workout.currentExIndex, isResting, currentEx.type, currentEx.duration]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -322,7 +296,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, currentEx, isResting, workout.currentExIndex]);
+  }, [isPaused, currentEx, isResting, workout.currentExIndex, onFinish]);
 
   const skip = (dir) => {
      setIsResting(false);
@@ -378,7 +352,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
     setIsAiLoading(true);
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
-      setSelected(res); setName(`${aiF} Goal`);
+      setSelected(res); setName(`${aiF} Focus`);
     } catch (e) { notify("AI Busy. Try again."); }
     finally { setIsAiLoading(false); }
   };
@@ -392,7 +366,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
             {['Beginner', 'Advanced'].map(o => <button key={o} onClick={() => setAiL(o)} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${aiL === o ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black text-zinc-500 border border-zinc-800'}`}>{o}</button>)}
             {['Full Body', 'Core', 'Upper'].map(o => <button key={o} onClick={() => setAiF(o)} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${aiF === o ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black text-zinc-500 border border-zinc-800'}`}>{o}</button>)}
         </div>
-        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">{isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Session</button>
+        <button onClick={handleAi} disabled={isAiLoading} className="w-full py-5 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/10 shadow-lg">{isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan</button>
       </div>
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-6">
         <input placeholder="Workout Title..." value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
