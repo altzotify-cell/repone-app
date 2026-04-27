@@ -44,82 +44,95 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v13';
+const appId = 'repone-pro-v14';
 
-// --- MASSIVE Exercise Library ---
+// --- EXPANDED Exercise Library (Verified v14 Videos) ---
 const EXERCISE_LIBRARY = [
-  // CHEST
-  { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
-  { id: 'ch2', name: 'Wide Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
-  { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
-  { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
-  { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
-  { id: 'ch6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
-  { id: 'ch7', name: 'Hindu Push-Ups', muscle: 'Chest', icon: '🧘', type: 'reps', count: 10, duration: 0, videoId: 'p5LhC6_7KVs' },
-  
-  // SHOULDERS
-  { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
-  { id: 'sh2', name: 'Elevated Pike Push-Ups', muscle: 'Shoulders', icon: '🪜', type: 'reps', count: 8, duration: 0, videoId: '1pG0LOnpU_Q' },
-  { id: 'sh3', name: 'Handstand Holds', muscle: 'Shoulders', icon: '🤸', type: 'time', count: 0, duration: 30, videoId: 'vV_6Y99XF_E' },
-  { id: 'sh4', name: 'Shoulder Taps', muscle: 'Shoulders', icon: '🖐️', type: 'time', count: 0, duration: 45, videoId: 'geSshv9EovM' },
-  { id: 'sh5', name: 'Handstand Push-Ups', muscle: 'Shoulders', icon: '🤸‍♂️', type: 'reps', count: 5, duration: 0, videoId: 'hP7W_G_fJ8Q' },
-  
-  // BACK
-  { id: 'ba1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
-  { id: 'ba2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
-  { id: 'ba3', name: 'Australian Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
-  { id: 'ba4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
-  
-  // ARMS
-  { id: 'ar1', name: 'Bench Dips', muscle: 'Arms', icon: '🪑', type: 'reps', count: 15, duration: 0, videoId: '0326dy_-CzM' },
-  { id: 'ar3', name: 'Headbangers', muscle: 'Arms', icon: '🎸', type: 'reps', count: 10, duration: 0, videoId: 'brhRXlOhsAM' },
+  // CHEST / PUSH
+  { id: 'p1', name: 'Standard Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'v9LABVJz8pg' },
+  { id: 'p2', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 's8S9s-K_Hxc' },
+  { id: 'p3', name: 'Wide Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
+  { id: 'p4', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'f0OHe-F_hS4' },
+  { id: 'p5', name: 'Dips', muscle: 'Chest', icon: '📉', type: 'reps', count: 10, duration: 0, videoId: '2z8JmcrW-As' },
+  { id: 'p6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
+  { id: 'p7', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: '4I6f99vL6fA' },
+  { id: 'p8', name: 'Handstand Holds', muscle: 'Shoulders', icon: '🤸', type: 'time', count: 0, duration: 30, videoId: 'vV_6Y99XF_E' },
+  { id: 'p9', name: 'Shoulder Taps', muscle: 'Shoulders', icon: '🖐️', type: 'time', count: 0, duration: 45, videoId: 'geSshv9EovM' },
 
-  // CORE
-  { id: 'co1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
-  { id: 'co2', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
-  { id: 'co3', name: 'Leg Raises', muscle: 'Core', icon: '🦿', type: 'reps', count: 15, duration: 0, videoId: 'HD1Q267V2EE' },
-  { id: 'co4', name: 'Hollow Body Hold', muscle: 'Core', icon: '🌙', type: 'time', count: 0, duration: 45, videoId: 'LlV8_fGhb-0' },
-  
+  // BACK / PULL
+  { id: 'u1', name: 'Pull-Ups', muscle: 'Back', icon: '🔝', type: 'reps', count: 8, duration: 0, videoId: 'eGo4IYlbE5g' },
+  { id: 'u2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
+  { id: 'u3', name: 'Australian Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
+  { id: 'u4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
+  { id: 'u5', name: 'Scapular Pull-Ups', muscle: 'Back', icon: '🦴', type: 'reps', count: 15, duration: 0, videoId: 'vY_6Z6f1t8s' },
+  { id: 'u6', name: 'Negative Pull-Ups', muscle: 'Back', icon: '📉', type: 'reps', count: 5, duration: 0, videoId: '7pS_B6V96Xw' },
+
   // LEGS
-  { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
-  { id: 'le2', name: 'Walking Lunges', muscle: 'Legs', icon: '🚶', type: 'reps', count: 20, duration: 0, videoId: 'L8fyJhZoQn8' },
-  { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
-  { id: 'le6', name: 'Calf Raises', muscle: 'Legs', icon: '🦶', type: 'reps', count: 25, duration: 0, videoId: 'gwLzBJYoWlM' },
-  
-  // FULL BODY
-  { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
-  { id: 'fb2', name: 'Jump Squats', muscle: 'Full Body', icon: '⬆️', type: 'reps', count: 15, duration: 0, videoId: '72BSZupb-1I' },
-  { id: 'fb3', name: 'Muscle-Ups', muscle: 'Full Body', icon: '🚀', type: 'reps', count: 5, duration: 0, videoId: 'Yvj_6N8_0V0' },
+  { id: 'l1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
+  { id: 'l2', name: 'Bulgarian Split Squats', muscle: 'Legs', icon: '🇧🇬', type: 'reps', count: 12, duration: 0, videoId: '2C-uNgKwPLE' },
+  { id: 'l3', name: 'Walking Lunges', muscle: 'Legs', icon: '🚶', type: 'reps', count: 20, duration: 0, videoId: 'L8fyJhZoQn8' },
+  { id: 'l4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
+  { id: 'l5', name: 'Glute Bridges', muscle: 'Legs', icon: '🌉', type: 'reps', count: 20, duration: 0, videoId: 'wPM8icPu6H8' },
+  { id: 'l6', name: 'Calf Raises', muscle: 'Legs', icon: '🦶', type: 'reps', count: 25, duration: 0, videoId: 'gwLzBJYoWlM' },
+  { id: 'l7', name: 'Wall Sit', muscle: 'Legs', icon: '🧱', type: 'time', count: 0, duration: 45, videoId: 'y-wV4Venusw' },
+
+  // CORE / FULL
+  { id: 'c1', name: 'Plank', muscle: 'Core', icon: '📏', type: 'time', count: 0, duration: 60, videoId: 'pSHjTRCQxIw' },
+  { id: 'c2', name: 'Leg Raises', muscle: 'Core', icon: '🦿', type: 'reps', count: 15, duration: 0, videoId: 'HD1Q267V2EE' },
+  { id: 'c3', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
+  { id: 'c4', name: 'Hollow Body Hold', muscle: 'Core', icon: '🌙', type: 'time', count: 0, duration: 45, videoId: 'LlV8_fGhb-0' },
+  { id: 'c5', name: 'Mountain Climbers', muscle: 'Core', icon: '⛰️', type: 'time', count: 0, duration: 30, videoId: 'zT-9L37Re_8' },
+  { id: 'f1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
+  { id: 'f2', name: 'Jump Squats', muscle: 'Full Body', icon: '⬆️', type: 'reps', count: 15, duration: 0, videoId: '72BSZupb-1I' },
+  { id: 'f3', name: 'Bench Dips', muscle: 'Arms', icon: '🪑', type: 'reps', count: 15, duration: 0, videoId: 'c3ZGl4pAwZ4' },
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// UNIVERSAL ALIAS: gemini-flash-latest to bypass regional "limit: 0" blocks
+const cohereKey = getViteEnv('VITE_COHERE_API_KEY', "");
+
+// Universal Endpoint using Flash Latest
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
+const COHERE_URL = `https://api.cohere.ai/v1/chat`;
 
+// --- API FUNCTIONS ---
 const callGemini = async (prompt, system) => {
-  if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
-  
-  const combinedPrompt = `SYSTEM INSTRUCTION: ${system}\n\nUSER REQUEST: ${prompt}`;
-
+  if (!geminiKey) throw new Error("Gemini Key Missing");
+  const combined = `SYSTEM INSTRUCTION: ${system}\n\nUSER REQUEST: ${prompt}`;
   const res = await fetch(GEMINI_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      contents: [{ parts: [{ text: combinedPrompt }] }]
-    })
+    body: JSON.stringify({ contents: [{ parts: [{ text: combined }] }] })
   });
-
-  if (!res.ok) {
-    const errorData = await res.json();
-    console.log("DEBUG ERROR:", JSON.stringify(errorData));
-    throw new Error(errorData.error?.message || `HTTP ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error("Gemini Limit/Region Error");
   const data = await res.json();
   let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  
-  // Clean up markdown blocks
   return text.replace(/```json/g, "").replace(/```/g, "").trim();
+};
+
+const callCohere = async (prompt, system) => {
+  if (!cohereKey) throw new Error("No AI Backup Configured");
+  const res = await fetch(COHERE_URL, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${cohereKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      message: prompt, 
+      preamble: system, 
+      model: 'command-r-08-2024' 
+    })
+  });
+  if (!res.ok) throw new Error("AI Backup Limit Reached");
+  const data = await res.json();
+  let text = data.text || "";
+  return text.replace(/```json/g, "").replace(/```/g, "").trim();
+};
+
+const callAI = async (prompt, system) => {
+  try {
+    return await callGemini(prompt, system);
+  } catch (e) {
+    console.warn("Switching to Cohere fallback engine...");
+    return await callCohere(prompt, system);
+  }
 };
 
 export default function App() {
@@ -166,9 +179,9 @@ export default function App() {
     });
     setAiTips(null);
     setView('live');
-    if (geminiKey) {
+    if (geminiKey || cohereKey) {
        setIsGeneratingTips(true);
-       callGemini(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 20 words.")
+       callAI(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 20 words.")
        .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
@@ -215,31 +228,17 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. 
-            Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
-            Return ONLY a raw JSON array. No introduction, no markdown.
-            Format: [{"name": "Exercise Name", "value": 15}]`;
-
-            const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
-            
+            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. Use only names from this list: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}. Return ONLY the raw JSON array. Format: [{"name": "Exercise Name", "value": 15}]`;
+            const text = await callAI(prompt, "You are a fitness API that only returns clean JSON arrays. No intro text.");
             try {
-              const parsed = JSON.parse(text);
+              const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+              const parsed = JSON.parse(cleaned);
               return parsed.map(item => {
-                const libMatch = EXERCISE_LIBRARY.find(ex => 
-                  ex.name.toLowerCase() === item.name.toLowerCase()
-                );
+                const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
                 if (!libMatch) return null;
-                return { 
-                  ...libMatch, 
-                  duration: libMatch.type === 'time' ? (item.value || 30) : 0, 
-                  count: libMatch.type === 'reps' ? (item.value || 10) : 0, 
-                  id: Math.random().toString(36).substr(2, 9) 
-                };
+                return { ...libMatch, duration: libMatch.type === 'time' ? (item.value || 30) : 0, count: libMatch.type === 'reps' ? (item.value || 10) : 0, id: Math.random().toString(36).substr(2, 9) };
               }).filter(Boolean);
-            } catch (e) {
-              console.error("Parsing error:", e);
-              return [];
-            }
+            } catch (e) { console.error("AI Error:", e); return []; }
         }} />}
       </main>
 
@@ -403,10 +402,8 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF });
       setSelected(res); setName(`${aiF} Build`);
-      notify("AI Routine Sync Successful");
-    } catch (e) { 
-        notify(`AI Error: ${e.message}`, "error"); 
-    } finally { setIsAiLoading(false); }
+      notify("Routine Generated");
+    } catch (e) { notify(`Error: ${e.message}`, "error"); } finally { setIsAiLoading(false); }
   };
 
   const updateEx = (id, val) => {
@@ -420,15 +417,15 @@ function Builder({ user, setView, generateWithAi, notify }) {
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">DESIGN</h2></div>
       
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-10 shadow-2xl border-t-2 border-t-[#007AFF]/20">
-        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini Pro AI</div>
+        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Dual-Engine AI</div>
         
         <div className="grid gap-10">
             <SelectionGroup label="Expertise" options={['Beginner', 'Intermediate', 'Advanced']} active={aiL} onChange={setAiL} />
-            <SelectionGroup label="Target" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
+            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
         <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/20 shadow-xl border-b-4 border-b-blue-700">
-            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Smart Plan
+            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan
         </button>
       </div>
 
@@ -452,7 +449,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
                         onChange={(e) => updateEx(ex.id, e.target.value)}
-                        className="bg-transparent text-[#e8ff47] font-bebas text-3xl w-full outline-none leading-none"
+                        className="bg-transparent text-[#e8ff47] font-bebas text-4xl w-full outline-none leading-none"
                     />
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{ex.type === 'time' ? 'Secs' : 'Reps'}</span>
                 </div>
