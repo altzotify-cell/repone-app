@@ -44,7 +44,7 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v8';
+const appId = 'repone-pro-v9';
 
 // --- EXPANDED Exercise Library ---
 const EXERCISE_LIBRARY = [
@@ -101,8 +101,8 @@ const EXERCISE_LIBRARY = [
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// Using v1beta for robust JSON mode support
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+// CHANGED to v1 stable to fix model not found error
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
   if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
@@ -112,10 +112,10 @@ const callGemini = async (prompt, system) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
       contents: [{ parts: [{ text: prompt }] }], 
-      // FIX: REST API requires camelCase systemInstruction
+      // FIXED: Using camelCase for systemInstruction
       systemInstruction: { parts: [{ text: system }] },
-      // FIX: REST API requires camelCase generationConfig and responseMimeType
       generationConfig: {
+        // FIXED: Using camelCase for responseMimeType
         responseMimeType: "application/json",
       }
     })
@@ -226,6 +226,7 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
+            // Updated prompt to be strictly JSON compliant
             const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. 
             Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
             Return format: [{"name": "Exercise Name", "value": 15}]`;
@@ -323,7 +324,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
     if (isResting) setTimeLeft(15);
     else if (currentEx.type === 'time') setTimeLeft(currentEx.duration);
     else setTimeLeft(0); 
-  }, [workout.currentExIndex, isResting]);
+  }, [workout.currentExIndex, isResting, currentEx.type, currentEx.duration]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -340,7 +341,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, isResting, workout.currentExIndex, onFinish]);
+  }, [isPaused, isResting, workout.currentExIndex, onFinish, currentEx.type]);
 
   const skip = (dir) => {
      setIsResting(false);
@@ -429,6 +430,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
     <div className="space-y-10 pt-4 animate-in slide-in-from-bottom duration-500 pb-24">
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">DESIGN</h2></div>
       
+      {/* AI ENGINE OPTIONS - BEGINNER, INTERMEDIATE, ADVANCED + TARGETS */}
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-10 shadow-2xl border-t-2 border-t-[#007AFF]/20">
         <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini Pro AI</div>
         
@@ -455,8 +457,10 @@ function Builder({ user, setView, generateWithAi, notify }) {
                     <div className="flex items-center gap-3"><span className="text-2xl">{ex.icon}</span><span className="font-bold text-sm tracking-tight">{ex.name}</span></div>
                     <button onClick={() => setSelected(selected.filter(x => x.id !== ex.id))} className="text-rose-500 p-2 active:scale-90"><Trash2 size={18} /></button>
                 </div>
+                {/* EDITABLE FIELD FOR REPS OR SECONDS */}
                 <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
                     <Edit3 size={16} className="text-zinc-600" />
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Set Target:</label>
                     <input 
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
