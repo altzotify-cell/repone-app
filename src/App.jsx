@@ -44,20 +44,19 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v7';
+const appId = 'repone-pro-v8';
 
-// --- EXPANDED Exercise Library (Basic & Complex) ---
+// --- EXPANDED Exercise Library ---
 const EXERCISE_LIBRARY = [
   // CHEST
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
-  { id: 'ch2', name: 'Wide Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
+  { id: 'ch2', name: 'Wide Grip Push-Ups', muscle: 'Chest', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'rr6eFNNDQdc' },
   { id: 'ch3', name: 'Decline Push-Ups', muscle: 'Chest', icon: '📉', type: 'reps', count: 12, duration: 0, videoId: 'SKPab2YC8BE' },
   { id: 'ch4', name: 'Incline Push-Ups', muscle: 'Chest', icon: '📈', type: 'reps', count: 15, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
   { id: 'ch6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
-  { id: 'ch7', name: 'Explosive Push-Ups', muscle: 'Chest', icon: '👏', type: 'reps', count: 8, duration: 0, videoId: '8223v8i8-kE' },
-  { id: 'ch8', name: 'Chest Dips', muscle: 'Chest', icon: '📉', type: 'reps', count: 10, duration: 0, videoId: '2z8JmcrW-As' },
-  { id: 'ch9', name: 'Pseudo Planche Push-Ups', muscle: 'Chest', icon: '🤸', type: 'reps', count: 8, duration: 0, videoId: 'Wunidm38-iM' },
+  { id: 'ch7', name: 'Hindu Push-Ups', muscle: 'Chest', icon: '🧘', type: 'reps', count: 10, duration: 0, videoId: 'p5LhC6_7KVs' },
+  { id: 'ch8', name: 'Explosive Push-Ups', muscle: 'Chest', icon: '👏', type: 'reps', count: 8, duration: 0, videoId: '8223v8i8-kE' },
   
   // SHOULDERS
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
@@ -102,8 +101,8 @@ const EXERCISE_LIBRARY = [
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// FIXED ENDPOINT: Changed v1beta to v1 stable to resolve model compatibility issues
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+// Using v1beta for robust JSON mode support
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
   if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY");
@@ -113,18 +112,18 @@ const callGemini = async (prompt, system) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
       contents: [{ parts: [{ text: prompt }] }], 
-      // Using snake_case for system_instruction is correct for v1 as well
-      system_instruction: { parts: [{ text: system }] },
-      // Forces the model to output valid JSON
+      // FIX: REST API requires camelCase systemInstruction
+      systemInstruction: { parts: [{ text: system }] },
+      // FIX: REST API requires camelCase generationConfig and responseMimeType
       generationConfig: {
-        response_mime_type: "application/json",
+        responseMimeType: "application/json",
       }
     })
   });
 
   if (!res.ok) {
     const errorData = await res.json();
-    console.error("Gemini API Error:", errorData);
+    console.error("Gemini API Error Detail:", errorData);
     throw new Error(errorData.error?.message || `HTTP ${res.status}`);
   }
 
@@ -180,7 +179,7 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 25 words.")
+       callGemini(`Give 3 trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 20 words.")
        .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
     }
   };
@@ -227,17 +226,14 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            // 1. More specific prompt
-            const prompt = `Generate a list of exercises for a ${opts.level} level ${opts.focus} workout. 
-            Use only these exercise names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
-            Return an array of objects with "name" and "value" (reps or seconds).`;
+            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. 
+            Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
+            Return format: [{"name": "Exercise Name", "value": 15}]`;
 
             const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
             
-            // 2. Direct parsing
             try {
               const parsed = JSON.parse(text);
-              
               return parsed.map(item => {
                 const libMatch = EXERCISE_LIBRARY.find(ex => 
                   ex.name.toLowerCase() === item.name.toLowerCase()
@@ -367,7 +363,7 @@ function LiveWorkout({ workout, setWorkout, onFinish, onCancel, aiTips, isGenera
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none select-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
+        <div className="text-zinc-800 font-black text-[120px] absolute opacity-10 leading-none tracking-tighter uppercase blur-[1px]">{isResting ? "REST" : currentEx.muscle}</div>
         <div className="text-[150px] font-bebas leading-none tabular-nums tracking-widest text-white">{isResting || currentEx.type === 'time' ? `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}` : currentEx.count}</div>
         
         {isResting && (
@@ -395,7 +391,7 @@ function SelectionGroup({ label, options, active, onChange }) {
         <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</p>
         <p className="text-[10px] font-black text-[#e8ff47] uppercase">{active}</p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {options.map(opt => (
           <button key={opt} onClick={() => onChange(opt)} className={`px-4 py-4 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all border ${active === opt ? 'bg-[#e8ff47] text-black border-[#e8ff47]' : 'bg-black/50 text-zinc-500 border-zinc-800'}`}>{opt}</button>
         ))}
@@ -417,9 +413,8 @@ function Builder({ user, setView, generateWithAi, notify }) {
     try {
       const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
       setSelected(res); setName(`${aiF} Build`);
-      notify("AI Engine Sync Successful");
+      notify("AI Routine Sync Successful");
     } catch (e) { 
-        // Showing actual technical error in popup
         notify(`AI Error: ${e.message}`, "error"); 
     } finally { setIsAiLoading(false); }
   };
