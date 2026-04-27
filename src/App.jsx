@@ -44,9 +44,9 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   experimentalAutoDetectLongPolling: true
 });
-const appId = 'repone-pro-v11';
+const appId = 'repone-pro-v12';
 
-// --- MASSIVE Exercise Library (Basic & Pro Movements) ---
+// --- MASSIVE Exercise Library ---
 const EXERCISE_LIBRARY = [
   // CHEST
   { id: 'ch1', name: 'Regular Push-Ups', muscle: 'Chest', icon: '💪', type: 'reps', count: 15, duration: 0, videoId: 'IODxDxX7oi4' },
@@ -56,8 +56,6 @@ const EXERCISE_LIBRARY = [
   { id: 'ch5', name: 'Diamond Push-Ups', muscle: 'Chest', icon: '💎', type: 'reps', count: 10, duration: 0, videoId: 'J0DnG1_S92I' },
   { id: 'ch6', name: 'Archer Push-Ups', muscle: 'Chest', icon: '🏹', type: 'reps', count: 8, duration: 0, videoId: '3m9p_0tU_kM' },
   { id: 'ch7', name: 'Hindu Push-Ups', muscle: 'Chest', icon: '🧘', type: 'reps', count: 10, duration: 0, videoId: 'p5LhC6_7KVs' },
-  { id: 'ch8', name: 'Explosive Push-Ups', muscle: 'Chest', icon: '👏', type: 'reps', count: 8, duration: 0, videoId: '8223v8i8-kE' },
-  { id: 'ch9', name: 'Pseudo Planche Push-Ups', muscle: 'Chest', icon: '🤸', type: 'reps', count: 8, duration: 0, videoId: 'Wunidm38-iM' },
   
   // SHOULDERS
   { id: 'sh1', name: 'Pike Push-Ups', muscle: 'Shoulders', icon: '🔺', type: 'reps', count: 10, duration: 0, videoId: 'spOsLQlbSRE' },
@@ -71,11 +69,9 @@ const EXERCISE_LIBRARY = [
   { id: 'ba2', name: 'Chin-Ups', muscle: 'Back', icon: '🤏', type: 'reps', count: 8, duration: 0, videoId: 'brhRXlOhsAM' },
   { id: 'ba3', name: 'Australian Rows', muscle: 'Back', icon: '↔️', type: 'reps', count: 12, duration: 0, videoId: 'hXTc1mdnZCw' },
   { id: 'ba4', name: 'Superman Holds', muscle: 'Back', icon: '🦸', type: 'time', count: 0, duration: 30, videoId: 'z6PJMT2y8GQ' },
-  { id: 'ba5', name: 'Archer Pull-Ups', muscle: 'Back', icon: '🏹', type: 'reps', count: 6, duration: 0, videoId: '3m9p_0tU_kM' },
 
   // ARMS
   { id: 'ar1', name: 'Bench Dips', muscle: 'Arms', icon: '🪑', type: 'reps', count: 15, duration: 0, videoId: '0326dy_-CzM' },
-  { id: 'ar2', name: 'Close-Grip Pushups', muscle: 'Arms', icon: '💎', type: 'reps', count: 12, duration: 0, videoId: 'Me9bHFAxn8c' },
   { id: 'ar3', name: 'Tricep Extensions', muscle: 'Arms', icon: '🦴', type: 'reps', count: 12, duration: 0, videoId: 'nS8mY_hS-rQ' },
 
   // CORE
@@ -83,54 +79,44 @@ const EXERCISE_LIBRARY = [
   { id: 'co2', name: 'Russian Twists', muscle: 'Core', icon: '🌀', type: 'reps', count: 20, duration: 0, videoId: 'wkD8rjkS_R8' },
   { id: 'co3', name: 'Leg Raises', muscle: 'Core', icon: '🦿', type: 'reps', count: 15, duration: 0, videoId: 'HD1Q267V2EE' },
   { id: 'co4', name: 'Hollow Body Hold', muscle: 'Core', icon: '🌙', type: 'time', count: 0, duration: 45, videoId: 'LlV8_fGhb-0' },
-  { id: 'co5', name: 'Bicycle Crunches', muscle: 'Core', icon: '🚲', type: 'reps', count: 20, duration: 0, videoId: 'Iwyvozckjak' },
-  { id: 'co6', name: 'L-Sit Hold', muscle: 'Core', icon: '🅻', type: 'time', count: 0, duration: 15, videoId: '6UIs0K-hXmU' },
   
   // LEGS
   { id: 'le1', name: 'Bodyweight Squats', muscle: 'Legs', icon: '🦵', type: 'reps', count: 20, duration: 0, videoId: 'aclHkVaku9U' },
   { id: 'le2', name: 'Walking Lunges', muscle: 'Legs', icon: '🚶', type: 'reps', count: 20, duration: 0, videoId: 'L8fyJhZoQn8' },
-  { id: 'le3', name: 'Bulgarian Split Squats', muscle: 'Legs', icon: '🇧🇬', type: 'reps', count: 12, duration: 0, videoId: '2C-uNgKwPLE' },
   { id: 'le4', name: 'Pistol Squats', muscle: 'Legs', icon: '🔫', type: 'reps', count: 5, duration: 0, videoId: 'qDcniqWRXjc' },
-  { id: 'le5', name: 'Glute Bridges', muscle: 'Legs', icon: '🌉', type: 'reps', count: 20, duration: 0, videoId: 'wPM8icPu6H8' },
   { id: 'le6', name: 'Calf Raises', muscle: 'Legs', icon: '🦶', type: 'reps', count: 25, duration: 0, videoId: 'gwLzBJYoWlM' },
   
   // FULL BODY
   { id: 'fb1', name: 'Burpees', muscle: 'Full Body', icon: '🔥', type: 'reps', count: 10, duration: 0, videoId: 'dZfeV_pLpGg' },
   { id: 'fb2', name: 'Jump Squats', muscle: 'Full Body', icon: '⬆️', type: 'reps', count: 15, duration: 0, videoId: '72BSZupb-1I' },
   { id: 'fb3', name: 'Muscle-Ups', muscle: 'Full Body', icon: '🚀', type: 'reps', count: 5, duration: 0, videoId: 'Yvj_6N8_0V0' },
-  { id: 'fb4', name: 'Mountain Climbers', muscle: 'Full Body', icon: '⛰️', type: 'time', count: 0, duration: 30, videoId: 'zT-9L37Re_8' },
 ];
 
 const geminiKey = getViteEnv('VITE_GEMINI_API_KEY', "");
-// Universal Failsafe: Using stable v1 endpoint
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+// FIXED URL: Using gemini-2.0-flash on v1beta for production stability
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
 
 const callGemini = async (prompt, system) => {
-  if (!geminiKey) throw new Error("Missing VITE_GEMINI_API_KEY in Vercel settings.");
+  if (!geminiKey) throw new Error("API Key Not Found in Vercel settings.");
   
-  // Combine system instruction into prompt to avoid naming mismatches (camelCase vs snake_case)
   const combinedPrompt = `SYSTEM INSTRUCTION: ${system}\n\nUSER REQUEST: ${prompt}`;
 
   const res = await fetch(GEMINI_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
-      contents: [{ 
-        parts: [{ text: combinedPrompt }] 
-      }]
+      contents: [{ parts: [{ text: combinedPrompt }] }]
     })
   });
 
   if (!res.ok) {
     const errorData = await res.json();
-    console.log("FULL API ERROR:", JSON.stringify(errorData));
+    console.log("DEBUG ERROR:", JSON.stringify(errorData));
     throw new Error(errorData.error?.message || `HTTP ${res.status}`);
   }
 
   const data = await res.json();
   let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  
-  // Clean up any markdown blocks (removes ```json and ```)
   return text.replace(/```json/g, "").replace(/```/g, "").trim();
 };
 
@@ -150,7 +136,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!u) {
-        try { await signInAnonymously(auth); } catch (e) { console.error("Auth init error"); }
+        try { await signInAnonymously(auth); } catch (e) {}
       }
       setUser(auth.currentUser);
       setIsLoading(false);
@@ -160,13 +146,11 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    try {
-      const qR = collection(db, 'artifacts', appId, 'users', user.uid, 'routines');
-      const qH = collection(db, 'artifacts', appId, 'users', user.uid, 'history');
-      const unsubR = onSnapshot(qR, (s) => setRoutines(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-      const unsubH = onSnapshot(qH, (s) => setHistory(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date - a.date)));
-      return () => { unsubR(); unsubH(); };
-    } catch (e) { console.error("Firestore access error"); }
+    const qR = collection(db, 'artifacts', appId, 'users', user.uid, 'routines');
+    const qH = collection(db, 'artifacts', appId, 'users', user.uid, 'history');
+    const unsubR = onSnapshot(qR, (s) => setRoutines(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsubH = onSnapshot(qH, (s) => setHistory(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date - a.date)));
+    return () => { unsubR(); unsubH(); };
   }, [user]);
 
   const notify = (msg, type = "success") => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 5000); };
@@ -182,8 +166,8 @@ export default function App() {
     setView('live');
     if (geminiKey) {
        setIsGeneratingTips(true);
-       callGemini(`Give 3 short trainer tips for a workout called ${routine.name}.`, "Fitness Pro. Max 20 words.")
-       .then(t => setAiTips(t)).catch(() => setAiTips("Focus on form!")).finally(() => setIsGeneratingTips(false));
+       callGemini(`Give 3 pro tips for ${routine.name}.`, "Fitness Pro. Max 20 words.")
+       .then(t => setAiTips(t)).catch(() => setAiTips("Push harder today!")).finally(() => setIsGeneratingTips(false));
     }
   };
 
@@ -229,31 +213,16 @@ export default function App() {
         {view === 'history' && <HistoryView history={history} />}
         {view === 'stats' && <Stats history={history} />}
         {view === 'builder' && <Builder user={user} setView={setView} notify={notify} generateWithAi={async (opts) => {
-            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. 
-            Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}.
-            Return ONLY a raw JSON array. No introduction, no markdown.
-            Format: [{"name": "Exercise Name", "value": 15}]`;
-
-            const text = await callGemini(prompt, "You are a fitness API that only returns JSON arrays. No conversational text.");
-            
+            const prompt = `Generate a JSON array of exercises for a ${opts.level} level ${opts.focus} workout. Use only these names: ${EXERCISE_LIBRARY.map(e=>e.name).join(', ')}. Return ONLY raw JSON array. Format: [{"name": "Exercise Name", "value": 15}]`;
+            const text = await callGemini(prompt, "You are a fitness API that only returns clean JSON arrays. No intro text.");
             try {
               const parsed = JSON.parse(text);
               return parsed.map(item => {
-                const libMatch = EXERCISE_LIBRARY.find(ex => 
-                  ex.name.toLowerCase() === item.name.toLowerCase()
-                );
+                const libMatch = EXERCISE_LIBRARY.find(ex => ex.name.toLowerCase() === item.name.toLowerCase());
                 if (!libMatch) return null;
-                return { 
-                  ...libMatch, 
-                  duration: libMatch.type === 'time' ? (item.value || 30) : 0, 
-                  count: libMatch.type === 'reps' ? (item.value || 10) : 0, 
-                  id: Math.random().toString(36).substr(2, 9) 
-                };
+                return { ...libMatch, duration: libMatch.type === 'time' ? (item.value || 30) : 0, count: libMatch.type === 'reps' ? (item.value || 10) : 0, id: Math.random().toString(36).substr(2, 9) };
               }).filter(Boolean);
-            } catch (e) {
-              console.error("Parsing error:", e);
-              return [];
-            }
+            } catch (e) { console.error("Parsing error:", e); return []; }
         }} />}
       </main>
 
@@ -286,7 +255,7 @@ function Home({ routines, setView, setSelectedRoutine }) {
               <div className="self-center text-zinc-700"><ChevronRight size={24} /></div>
           </div>
         ))}
-        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all shadow-lg"><Plus size={24} /> Build New Routine</button>
+        <button onClick={() => setView('builder')} className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[28px] text-zinc-600 font-bold uppercase text-xs flex flex-col items-center gap-3 active:border-zinc-500 transition-all shadow-lg"><Plus size={24} /> Build Session</button>
       </div>
     </div>
   );
@@ -415,9 +384,9 @@ function Builder({ user, setView, generateWithAi, notify }) {
   const handleAi = async () => {
     setIsAiLoading(true);
     try {
-      const res = await generateWithAi({ level: aiL, focus: aiF, duration: 15 });
+      const res = await generateWithAi({ level: aiL, focus: aiF });
       setSelected(res); setName(`${aiF} Build`);
-      notify("AI Routine Sync Successful");
+      notify("Gemini 2.0 Plan Synced");
     } catch (e) { 
         notify(`AI Error: ${e.message}`, "error"); 
     } finally { setIsAiLoading(false); }
@@ -434,22 +403,22 @@ function Builder({ user, setView, generateWithAi, notify }) {
       <div className="flex items-center gap-4"><button onClick={() => setView('home')} className="p-2 text-zinc-500"><ChevronLeft size={24} /></button><h2 className="font-bebas text-5xl tracking-widest text-zinc-200">DESIGN</h2></div>
       
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-10 shadow-2xl border-t-2 border-t-[#007AFF]/20">
-        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini Pro AI</div>
+        <div className="flex items-center gap-2 text-[#e8ff47] text-[11px] uppercase font-black tracking-widest"><Sparkles size={18} fill="currentColor" /> Gemini 2.0 Engine</div>
         
         <div className="grid gap-10">
             <SelectionGroup label="Expertise" options={['Beginner', 'Intermediate', 'Advanced']} active={aiL} onChange={setAiL} />
-            <SelectionGroup label="Target" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
+            <SelectionGroup label="Target Area" options={['Full Body', 'Core', 'Upper Body', 'Lower Body', 'Arms', 'Legs', 'Chest', 'Back']} active={aiF} onChange={setAiF} />
         </div>
 
         <button onClick={handleAi} disabled={isAiLoading} className="w-full py-6 bg-[#007AFF] rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-blue-500/20 shadow-xl border-b-4 border-b-blue-700">
-            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Smart Plan
+            {isAiLoading ? <Loader2 className="animate-spin" /> : <Wand2 />} Generate Plan
         </button>
       </div>
 
       <div className="bg-[#141414] border border-zinc-800 rounded-[32px] p-6 space-y-8 shadow-xl">
         <div className="space-y-2">
             <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-2">Plan Name</p>
-            <input placeholder="Ex: Muscle Maker" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
+            <input placeholder="Ex: Peak Performance" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-800 p-6 rounded-2xl text-xl font-bold outline-none focus:border-[#e8ff47] transition-all" />
         </div>
         
         <div className="space-y-4">
@@ -461,7 +430,7 @@ function Builder({ user, setView, generateWithAi, notify }) {
                 </div>
                 <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
                     <Edit3 size={16} className="text-zinc-600" />
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Set Target:</label>
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Set Goal:</label>
                     <input 
                         type="number" 
                         value={ex.type === 'time' ? ex.duration : ex.count}
