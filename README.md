@@ -250,17 +250,71 @@ Verified against this repository on the current commit:
   to a tier that leaves production open, every key in the project becomes downloadable in a
   single request. Treat that setting as load-bearing rather than incidental.
 
+### 2026-10-24 — AI key exposure review
+
+Triggered by finding `VITE_GEMINI_API_KEY` / `VITE_COHERE_API_KEY` readable in the deployed
+bundle. Findings from the Vercel API and project audit log:
+
+- **Protection was never recorded as disabled.** `ssoProtection.deploymentType` is `all`, and the
+  audit log for the project contains no `sso-protection-updated` event, so there is no evidence of
+  a window in which the bundle was served to anonymous visitors.
+- **Anonymous access is closed on every surviving host.** At review time
+  `repone-app-altzotify-4904s-projects.vercel.app` and the new `repone-app-official.vercel.app` both
+  answer `302` to `vercel.com/sso-api`; the original `project-oyof0.vercel.app` was detached from
+  the project and now returns `404`.
+- **Protection is not a secrecy control.** It gates anonymous access only; the same inlined keys
+  were served to any authenticated viewer. The keys were exposed to everyone with team access
+  regardless of the SSO setting. Rotation of the primary key was declined (see below), so they
+  remain exposed.
+- **No automation bypass exists.** `protectionBypass` is empty, so no "Protection Bypass for
+  Automation" link can be used to reach the deployment without a Vercel session. Nothing to revoke.
+- **`VITE_COHERE_API_KEY` had lost Preview coverage.** The variable was deleted from Production
+  *and* Preview at 20:39 and re-added for Production only at 20:42. Its target list has been
+  restored to Production + Preview without changing the stored value.
+- **`VITE_GEMINI_API_KEY` was not rotated, by decision.** Its last write is the original creation in
+  April 2026, so the currently deployed value is still the one that was exposed. The owner chose to
+  retain the existing key, which makes this a recorded risk acceptance rather than an open action.
+
+The project itself was created as `project-oyof0` and later renamed to `repone-app`; the
+auto-generated deployment domain keeps the original name, which is why `project-oyof0.vercel.app`
+outlived the first rename. A `.vercel.app` default domain is sticky, so renaming alone does not
+move it: the old name was detached explicitly (`404` afterwards), and
+`repone-app-official.vercel.app` was attached and the project renamed to match, because
+`repone-app.vercel.app` is already held by another team. All of these remain covered by the same
+`all` deployment protection.
+
 The structural risk remains: this is a client-only app. Because Vite statically inlines
 `VITE_GEMINI_API_KEY` and `VITE_COHERE_API_KEY` into `dist/assets/*.js`, **anyone who can load
 the deployed app can read those keys** out of the bundle. The only sound fix is a server-side
 proxy that holds the keys and calls the providers on the app's behalf.
+
+### Decision — Gemini key retained
+
+Rotation of `VITE_GEMINI_API_KEY` was declined on 2026-10-24, so the key that was exposed is the key
+that stays in service. Marking an entry `sensitive` in Vercel hides it from the API and the
+dashboard only; the build still substitutes it into the client bundle, where anyone who can load the
+app can read it. `VITE_COHERE_API_KEY` remains the fallback and has to be treated as equally public.
+
+With rotation off the table, the remaining controls are:
+
+1. **Keep deployment protection on `all`.** It is the only access gate left. Do not move it to
+   `preview` and do not disable it while these keys are live.
+2. **Bound the damage at the provider.** Restrict the key to the Generative Language API and set a
+   daily quota or budget alert on the owning Google Cloud project, so abuse is capped and visible
+   instead of open-ended. An HTTP-referrer restriction is worth attempting, but it only helps if the
+   Gemini endpoint actually enforces it: verify from a non-matching origin before relying on it.
+3. **A rebuild adds no new exposure.** The exposed value is already inlined in the bundle the live
+   deployment serves, so deploying again neither adds nor removes exposure. This note was initially
+   held back from `main` to avoid triggering a deploy; on review that bought nothing, because the
+   same key is already being served.
 
 ## Revival notes
 
 If this is picked back up, in rough priority order:
 
 1. Move AI calls behind a serverless function (`/api/generate`) and drop the `VITE_` prefix from
-   both AI keys so they never enter the bundle. Rotate the existing keys first.
+   both AI keys so they never enter the bundle. Rotating the existing keys is still the only real
+   fix; it was deferred here, not dismissed.
 2. Replace the `getViteEnv` fallbacks with a startup check that fails loudly when Firebase config
    is missing, instead of shipping credentials in source.
 3. Install `tailwindcss-animate` and add it to `plugins` to make the existing animation classes
